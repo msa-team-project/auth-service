@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.authservice.mapper.UserMapper">
+    <resultMap id="userResultMap" type="User">
+        <result property="uid" column="uid"/>
+        <result property="userId" column="user_id"/>
+        <result property="password" column="password"/>
+        <result property="userName" column="user_name"/>
+        <result property="email" column="email"/>
+        <result property="emailyn" column="emailyn"/>
+        <result property="phone" column="phone"/>
+        <result property="phoneyn" column="phoneyn"/>
+        <result property="mainAddress" column="main_address"/>
+        <result property="subAddress1" column="sub_address_1"/>
+        <result property="subAddress2" column="sub_address_2"/>
+        <result property="point" column="point"/>
+        <result property="role" column="role"/>
+        <result property="status" column="status"/>
+        <result property="createdDate" column="created_date"/>
+    </resultMap>
+
+    <insert id="save" parameterType="User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user (user_id,password,user_name,email,emailyn,phone,phoneyn,main_address,sub_address_1,sub_address_2,role)
+        VALUES (#{userId},#{password},#{userName}, #{email}, #{emailyn}, #{phone}, #{phoneyn}, #{mainAddress}, #{subAddress1}, #{subAddress2},#{role});
+    </insert>
+
+    <select id="findUserByUserId" parameterType="String" resultMap="userResultMap">
+        SELECT uid, user_id, password, user_name, email, emailyn, phone, phoneyn, main_address, sub_address_1, sub_address_2, point, role, status, created_date
+        FROM user
+        WHERE user_id = #{userId};
+    </select>
+</mapper>
