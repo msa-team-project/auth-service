@@ -1,0 +1,19 @@
+server:
+  port: 9002
+
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/auth?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 1234
+
+mybatis:
+  mapper-locations: classpath:mappers/*.xml
+  type-aliases-package: com.example.authservice.model
+
+jwt:
+  issuer: dlstlr1707@gmail.com
+  secret_key: 55DQ7XtZjKEuftetbQMtw0geU9SS1rR/fbrPOAqIQ2UUPJ+crjXRoLppDtreyvim53v3U6+hTLcbunHlxlNGlA==
