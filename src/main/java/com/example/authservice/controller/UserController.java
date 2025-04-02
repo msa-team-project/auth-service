@@ -30,7 +30,13 @@ public class UserController {
 
     @PostMapping("/join")
     public UserJoinResponseDTO join(@RequestBody UserJoinRequestDTO userJoinRequestDTO) {
-        log.info("join :: {}", userJoinRequestDTO.toString());
+        log.info("join :: {}", userJoinRequestDTO.getUserName() + " " + userJoinRequestDTO.getEmail());
         return userService.join(userJoinRequestDTO.toUser(bCryptPasswordEncoder));
+    }
+
+    @PostMapping("/login/oauth")
+    public UserJoinResponseDTO socialLogin() {
+        System.out.println("social login");
+        return null;
     }
 }
