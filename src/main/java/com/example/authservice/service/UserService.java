@@ -23,6 +23,7 @@ public class UserService {
     private final TokenProviderService tokenProviderService;
 
     public UserLoginResponseDTO login(String username, String password) {
+        System.out.println("login info is :: " + username + " " + password);
 
         Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
         SecurityContextHolder.getContext().setAuthentication(authenticate);

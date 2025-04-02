@@ -20,7 +20,7 @@
         <result property="createdDate" column="created_date"/>
     </resultMap>
 
-    <insert id="save" parameterType="User" useGeneratedKeys="true" keyProperty="id">
+    <insert id="save" parameterType="User" useGeneratedKeys="true" keyProperty="uid">
         INSERT INTO user (user_id,password,user_name,email,emailyn,phone,phoneyn,main_address,sub_address_1,sub_address_2,role)
         VALUES (#{userId},#{password},#{userName}, #{email}, #{emailyn}, #{phone}, #{phoneyn}, #{mainAddress}, #{subAddress1}, #{subAddress2},#{role});
     </insert>
