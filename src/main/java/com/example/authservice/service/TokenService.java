@@ -7,6 +7,7 @@ import com.example.authservice.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+
 import java.time.Duration;
 
 @Service
@@ -16,7 +17,10 @@ public class TokenService {
     private final TokenProviderService tokenProviderService;
 
     public RefreshTokenResponseDTO refreshToken(String refreshToken) {
-        int result = tokenProviderService.validToken(refreshToken);
+        int result = tokenProviderService.validToken("refreshToken", refreshToken);
+        // oauth와 자체가입자의 로직 구분해야함
+        // oauth 토큰 재발행을 프론트에서 해야함
+
         String newAccessToken = null;
         String newRefreshToken = null;
 
@@ -39,7 +43,7 @@ public class TokenService {
     }
 
     public ValidTokenResponseDTO validateToken(String token) {
-        int result = tokenProviderService.validToken(token);
+        int result = tokenProviderService.validToken("accessToken", token);
         return ValidTokenResponseDTO.builder()
                 .statusNum(result)
                 .build();

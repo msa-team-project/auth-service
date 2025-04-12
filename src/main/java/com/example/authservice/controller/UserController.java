@@ -1,9 +1,6 @@
 package com.example.authservice.controller;
 
-import com.example.authservice.dto.UserJoinRequestDTO;
-import com.example.authservice.dto.UserJoinResponseDTO;
-import com.example.authservice.dto.UserLoginRequestDTO;
-import com.example.authservice.dto.UserLoginResponseDTO;
+import com.example.authservice.dto.*;
 import com.example.authservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +32,8 @@ public class UserController {
     }
 
     @PostMapping("/login/oauth")
-    public UserJoinResponseDTO socialLogin() {
-        System.out.println("social login");
-        return null;
+    public OAuthLoginResponseDTO socialLogin(@RequestBody OAuthLoginRequestDTO oauthLoginRequestDTO) {
+        log.info("oauth login :: {}", oauthLoginRequestDTO.getAccessToken());
+        return userService.oauthLogin(oauthLoginRequestDTO);
     }
 }

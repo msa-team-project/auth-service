@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.authservice.mapper.TokenMapper">
+    <resultMap id="tokenResultMap" type="Token">
+        <result property="uid" column="uid"/>
+        <result property="userUid" column="user_uid"/>
+        <result property="socialUid" column="social_uid"/>
+        <result property="accessToken" column="access_token"/>
+        <result property="refreshToken" column="refresh_token"/>
+    </resultMap>
+
+    <insert id="saveUserToken" parameterType="Token" useGeneratedKeys="true" keyProperty="uid">
+        INSERT INTO token (user_uid,access_token,refresh_token)
+        VALUES (#{userUid},#{accessToken}, #{refreshToken});
+    </insert>
+
+    <insert id="saveSocialToken" parameterType="Token" useGeneratedKeys="true" keyProperty="uid">
+        INSERT INTO token (social_uid,access_token,refresh_token)
+        VALUES (#{socialUid},#{accessToken}, #{refreshToken});
+    </insert>
+
+    <select id="findTokenByAccessToken" parameterType="String" resultMap="tokenResultMap">
+        SELECT uid, user_uid, social_uid, access_token, refresh_token
+        FROM token
+        WHERE access_token = #{accessToken};
+    </select>
+
+    <select id="findTokenByRefreshToken" parameterType="String" resultMap="tokenResultMap">
+        SELECT uid, user_uid, social_uid, access_token, refresh_token
+        FROM token
+        WHERE refresh_token = #{refreshToken};
+    </select>
+
+    <update id="updateSocialToken" parameterType="Token" useGeneratedKeys="true" keyProperty="uid">
+        UPDATE
+            token
+        SET
+            access_token = #{accessToken}, refresh_token = #{refreshToken}
+        WHERE
+            social_uid = #{socialUid};
+    </update>
+
+    <update id="updateUserToken" parameterType="Token" useGeneratedKeys="true" keyProperty="uid">
+        UPDATE
+            token
+        SET
+            access_token = #{accessToken}, refresh_token = #{refreshToken}
+        WHERE
+            user_uid = #{userUid};
+    </update>
+
+    <delete id="deleteToken">
+
+    </delete>
+</mapper>
