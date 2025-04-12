@@ -1,18 +1,29 @@
 package com.example.authservice.service;
 
 import com.example.authservice.config.security.CustomUserDetails;
+import com.example.authservice.dto.OAuthLoginRequestDTO;
+import com.example.authservice.dto.OAuthLoginResponseDTO;
 import com.example.authservice.dto.UserJoinResponseDTO;
 import com.example.authservice.dto.UserLoginResponseDTO;
+import com.example.authservice.mapper.TokenMapper;
 import com.example.authservice.mapper.UserMapper;
+import com.example.authservice.model.Social;
 import com.example.authservice.model.User;
+import com.example.authservice.type.Role;
+import com.example.authservice.type.Type;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+
+import static com.example.authservice.type.Role.ROLE_USER;
+import static com.example.authservice.type.Type.*;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +33,7 @@ public class UserService {
     private final AuthenticationManager authenticationManager;
     private final TokenProviderService tokenProviderService;
 
+    @Transactional
     public UserLoginResponseDTO login(String username, String password) {
         System.out.println("login info is :: " + username + " " + password);
 
@@ -36,6 +48,12 @@ public class UserService {
         System.out.println("accessToken is :: " + accessToken);
         System.out.println("refreshToken is :: " + refreshToken);
 
+        // redis에 저장
+        tokenProviderService.saveTokensToRedis("USER:"+user.getUserId(), accessToken, refreshToken);
+
+        // DB에 저장
+        tokenProviderService.updateTokenToDatabase("user",user.getUid(), accessToken, refreshToken);
+
         return UserLoginResponseDTO.builder()
                 .loggedIn(true)
                 .accessToken(accessToken)
@@ -45,13 +63,154 @@ public class UserService {
                 .build();
     }
 
+    @Transactional
     public UserJoinResponseDTO join(User user){
-        return userMapper.save(user) == 1 ?
-                UserJoinResponseDTO.builder()
-                        .isSuccess(true)
-                        .build()
-                : UserJoinResponseDTO.builder()
-                        .isSuccess(false)
+        User result = userMapper.save(user);
+
+        if(result == null){
+            return UserJoinResponseDTO.builder()
+                    .isSuccess(false)
+                    .build();
+        }else{
+            return UserJoinResponseDTO.builder()
+                    .isSuccess(true)
+                    .build();
+        }
+    }
+
+    @Transactional
+    public OAuthLoginResponseDTO oauthLogin(OAuthLoginRequestDTO oauthDTO){
+        
+        String[] tokens = oauthDTO.getAccessToken().split(":");
+
+        Social findSocial;
+
+        if("naver".equals(tokens[0])){
+            findSocial = userMapper.findSocialByUserName(oauthDTO.getName());
+        }else if("google".equals(tokens[0])){
+            findSocial = userMapper.findSocialByUserName(oauthDTO.getName());
+        }else if("kakao".equals(tokens[0])){
+            // 지금은 정보요청 권한이 없어서 닉네임만 받아올수 있음
+            findSocial = userMapper.findSocialByUserName(oauthDTO.getNickname());
+        }else{
+            return OAuthLoginResponseDTO.builder()
+                    .loggedIn(false)
+                    .message("ForbiddenToken")
+                    .build();
+        }
+
+        if(findSocial == null){
+            // 회원정보 저장 후 로그인 처리
+            Social newSocial = buildNewSocialObj(tokens[0], oauthDTO);
+
+            if(newSocial != null){
+                int result = userMapper.saveSocial(newSocial);
+                if(result == 1){
+                    Social social = userMapper.findSocialByUserName(oauthDTO.getName());
+
+                    // redis에 저장
+                    tokenProviderService.saveTokensToRedis(social.getType().name()+":"+oauthDTO.getId(), oauthDTO.getAccessToken(), oauthDTO.getRefreshToken());
+
+                    // DB에 저장
+                    tokenProviderService.saveTokenToDatabase("social",social.getUid(),oauthDTO.getAccessToken(),oauthDTO.getRefreshToken());
+
+                    return OAuthLoginResponseDTO.builder()
+                            .loggedIn(true)
+                            .type(newSocial.getType())
+                            .userName(newSocial.getUserName())
+                            .email(newSocial.getEmail())
+                            .mobile(newSocial.getPhone())
+                            .role(newSocial.getRole())
+                            .accessToken(oauthDTO.getAccessToken())
+                            .refreshToken(oauthDTO.getRefreshToken())
+                            .build();
+                }else{
+                    return OAuthLoginResponseDTO.builder()
+                            .loggedIn(false)
+                            .build();
+                }
+            }else{
+                return OAuthLoginResponseDTO.builder()
+                        .loggedIn(false)
+                        .message("Forbidden")
                         .build();
+            }
+        }else{
+            // accessToken의 타입 잘라서 타입이 일치하면 로그인 처리
+            // 다른 타입이면 이미 가입한 계정이 있다고 응답
+            System.out.println("find type is :: " + findSocial.getType().name());
+            System.out.println("tokens type is :: " + tokens[0]);
+            if(findSocial.getType().name().toLowerCase().equals(tokens[0])){
+
+                // redis에 저장
+                tokenProviderService.saveTokensToRedis(findSocial.getType().name()+":"+oauthDTO.getId(), oauthDTO.getAccessToken(), oauthDTO.getRefreshToken());
+
+                // DB에 저장
+                tokenProviderService.updateTokenToDatabase("social",findSocial.getUid(),oauthDTO.getAccessToken(),oauthDTO.getRefreshToken());
+                
+                return OAuthLoginResponseDTO.builder()
+                            .loggedIn(true)
+                            .type(findSocial.getType())
+                            .userName(findSocial.getUserName())
+                            .email(findSocial.getEmail())
+                            .mobile(findSocial.getPhone())
+                            .role(findSocial.getRole())
+                            .accessToken(oauthDTO.getAccessToken())
+                            .refreshToken(oauthDTO.getRefreshToken())
+                            .build();
+            }else{
+                return OAuthLoginResponseDTO.builder()
+                        .loggedIn(false)
+                        .type(findSocial.getType())
+                        .message("AlreadyExists")
+                        .build();
+            }
+        }
+    }
+
+    private Social buildNewSocialObj (String type, OAuthLoginRequestDTO oauthDTO) {
+        if("naver".equals(type)){
+            return Social.builder()
+                    .userName(oauthDTO.getName())
+                    .email("")
+                    .emailyn("n")
+                    .phone(oauthDTO.getMobile())
+                    .phoneyn("n")
+                    .mainAddress("")
+                    .subAddress1("")
+                    .subAddress2("")
+                    .type(NAVER)
+                    .role(ROLE_USER)
+                    .build();
+        }else if("google".equals(type)){
+            return Social.builder()
+                    .userName(oauthDTO.getName())
+                    .email(oauthDTO.getEmail())
+                    .emailyn("n")
+                    .phone("")
+                    .phoneyn("n")
+                    .mainAddress("")
+                    .subAddress1("")
+                    .subAddress2("")
+                    .type(GOOGLE)
+                    .role(ROLE_USER)
+                    .build();
+        }else if("kakao".equals(type)){
+            // 지금은 정보요청 권한이 없어서 닉네임만 받아올수 있음
+            return Social.builder()
+                    .userName(oauthDTO.getNickname())
+                    .email("")
+                    .emailyn("n")
+                    .phone("")
+                    .phoneyn("n")
+                    .mainAddress("")
+                    .subAddress1("")
+                    .subAddress2("")
+                    .type(KAKAO)
+                    .role(ROLE_USER)
+                    .build();
+        }else{
+            return null;
+        }
     }
 }
