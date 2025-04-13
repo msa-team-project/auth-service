@@ -21,14 +21,21 @@ public class TokenService {
         // oauth와 자체가입자의 로직 구분해야함
         // oauth 토큰 재발행을 프론트에서 해야함
 
+        String[] splitTokens = refreshToken.split(":");
+
         String newAccessToken = null;
         String newRefreshToken = null;
 
         if(result == 1) {
-            User user = tokenProviderService.getTokenDetails(refreshToken);
+            if("naver".equals(splitTokens[0]) || "kakao".equals(splitTokens[0]) || "google".equals(splitTokens[0]) ) {
+                newAccessToken = tokenProviderService.getAccessTokenFromRedis(splitTokens[1]);
+                newRefreshToken = tokenProviderService.getRefreshTokenFromRedis(splitTokens[1]);
+            }else{
+                User user = tokenProviderService.getTokenDetails(refreshToken);
 
-            newAccessToken = tokenProviderService.generateToken(user, Duration.ofHours(2));
-            newRefreshToken = tokenProviderService.generateToken(user, Duration.ofDays(2));
+                newAccessToken = tokenProviderService.generateToken(user, Duration.ofHours(2));
+                newRefreshToken = tokenProviderService.generateToken(user, Duration.ofDays(2));
+            }
         }
 
         return RefreshTokenResponseDTO.builder()

@@ -78,7 +78,6 @@ public class UserService {
         }
     }
 
-    @Transactional
     public OAuthLoginResponseDTO oauthLogin(OAuthLoginRequestDTO oauthDTO){
         
         String[] tokens = oauthDTO.getAccessToken().split(":");
