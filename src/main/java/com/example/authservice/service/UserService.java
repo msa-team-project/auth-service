@@ -1,5 +1,6 @@
 package com.example.authservice.service;
 
+import com.example.authservice.config.redis.RedisUtil;
 import com.example.authservice.config.security.CustomUserDetails;
 import com.example.authservice.dto.*;
 import com.example.authservice.mapper.TokenMapper;
@@ -29,6 +30,8 @@ public class UserService {
     private final UserMapper userMapper;
     private final AuthenticationManager authenticationManager;
     private final TokenProviderService tokenProviderService;
+    private final EmailService emailService;
+    private final RedisUtil redisUtil;
 
     @Transactional
     public UserLoginResponseDTO login(String username, String password) {
@@ -62,6 +65,12 @@ public class UserService {
 
     @Transactional
     public UserJoinResponseDTO join(User user){
+
+        String email = user.getEmail();
+        if (!redisUtil.existData(email + ":verified") || !"true".equals(redisUtil.getData(email + ":verified"))) {
+            throw new RuntimeException("이메일 인증이 필요합니다.");
+        }
+
         User result = userMapper.save(user);
 
         if(result == null){
@@ -69,10 +78,18 @@ public class UserService {
                     .isSuccess(false)
                     .build();
         }else{
+            // 가입 성공 후 인증 플래그 제거
+            redisUtil.deleteData(email + ":verified");
+
             return UserJoinResponseDTO.builder()
                     .isSuccess(true)
                     .build();
         }
+    }
+
+    //이메일 인증 코드 검증 로직
+    public boolean verifyEmail(String email, String code) {
+        return emailService.verifyEmailCode(email, code);
     }
 
     public OAuthLoginResponseDTO oauthLogin(OAuthLoginRequestDTO oauthDTO){

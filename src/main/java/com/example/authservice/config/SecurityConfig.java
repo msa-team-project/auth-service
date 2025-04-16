@@ -20,8 +20,10 @@ public class SecurityConfig {
                         authorizeRequests -> authorizeRequests
                                 .requestMatchers(
                                         "/auths/**",
-                                        "/oauth/**"
-                                ).permitAll()
+                                        "/oauth/**",
+                                        "/email/**"
+                                )
+                                .permitAll()
                                 .anyRequest().authenticated()
                 );
 
