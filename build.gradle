@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.4'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
 }
 
 group = 'com.example'
@@ -59,4 +60,38 @@ dependencyManagement {
 
 tasks.named('test') {
     useJUnitPlatform()
+    finalizedBy 'jacocoTestReport' // test가 끝나면 jacocoTestReport 동작
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        html.required.set(true)
+        xml.required.set(false)
+        csv.required.set(false)
+        html.outputLocation.set(file("$buildDir/reports/jacoco"))
+    }
+
+    classDirectories.setFrom(
+            files(fileTree(
+                    dir: "$buildDir/classes/java/main",
+                    // 경로 변경 필수!!
+                    includes: ['com/example/authservice/service/UserService.class'],
+                    excludes: ['**/config/**', '**/dto/**', '**/type/**', '**/controller/**', '**/handler/**', '**/util/**']
+            ))
+    )
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            element = 'CLASS'
+
+            limit {
+                counter = 'INSTRUCTION'
+                value = 'COVEREDRATIO'
+                minimum = 0.6  // 최소 커버리지 60%로 설정
+            }
+        }
+    }
 }

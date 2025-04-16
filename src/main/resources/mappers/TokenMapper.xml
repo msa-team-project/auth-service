@@ -20,16 +20,16 @@
         VALUES (#{socialUid},#{accessToken}, #{refreshToken});
     </insert>
 
-    <select id="findTokenByAccessToken" parameterType="String" resultMap="tokenResultMap">
+    <select id="findTokenByUserUid" parameterType="Integer" resultMap="tokenResultMap">
         SELECT uid, user_uid, social_uid, access_token, refresh_token
         FROM token
-        WHERE access_token = #{accessToken};
+        WHERE user_uid = #{userUid};
     </select>
 
-    <select id="findTokenByRefreshToken" parameterType="String" resultMap="tokenResultMap">
+    <select id="findTokenBySocialUid" parameterType="Integer" resultMap="tokenResultMap">
         SELECT uid, user_uid, social_uid, access_token, refresh_token
         FROM token
-        WHERE refresh_token = #{refreshToken};
+        WHERE social_uid = #{socialUid};
     </select>
 
     <update id="updateSocialToken" parameterType="Token" useGeneratedKeys="true" keyProperty="uid">
@@ -50,7 +50,13 @@
             user_uid = #{userUid};
     </update>
 
-    <delete id="deleteToken">
+    <delete id="deleteTokenByUserUid" parameterType="Integer">
+        DELETE FROM token
+        WHERE user_uid = #{userUid}
+    </delete>
 
+    <delete id="deleteTokenBySocialUid" parameterType="Integer">
+        DELETE FROM token
+        WHERE social_uid = #{socialUid}
     </delete>
 </mapper>

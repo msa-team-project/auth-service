@@ -24,7 +24,7 @@ public class TokenController {
 
     @PostMapping("/validToken")
     public ValidTokenResponseDTO validToken(@RequestBody ValidTokenRequestDTO validTokenRequestDTO) {
-        log.info("Validate token request ");
+        log.info("Validate token request :: {}", validTokenRequestDTO.getToken());
         return tokenService.validateToken(validTokenRequestDTO.getToken());
     }
 
@@ -32,6 +32,12 @@ public class TokenController {
     public ClaimsResponseDTO claims(@RequestBody ClaimsRequestDTO claimsRequestDTO) {
         log.info("Claims request ");
         return tokenService.getAuthentication(claimsRequestDTO.getToken());
+    }
+
+    @PostMapping("/re/tokens")
+    public RefreshTokenResponseDTO updateTokens(@RequestBody OAuthUpdateTokensDTO oAuthUpdateTokensDTO){
+        log.info("Update tokens request ");
+        return tokenService.updateTokens(oAuthUpdateTokensDTO.getAccessToken(), oAuthUpdateTokensDTO.getRefreshToken());
     }
 
 }

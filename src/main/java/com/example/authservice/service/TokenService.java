@@ -3,6 +3,9 @@ package com.example.authservice.service;
 import com.example.authservice.dto.ClaimsResponseDTO;
 import com.example.authservice.dto.RefreshTokenResponseDTO;
 import com.example.authservice.dto.ValidTokenResponseDTO;
+import com.example.authservice.mapper.TokenMapper;
+import com.example.authservice.mapper.UserMapper;
+import com.example.authservice.model.Social;
 import com.example.authservice.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import java.time.Duration;
 public class TokenService {
 
     private final TokenProviderService tokenProviderService;
+    private final UserMapper userMapper;
 
     public RefreshTokenResponseDTO refreshToken(String refreshToken) {
         int result = tokenProviderService.validToken("refreshToken", refreshToken);
@@ -54,5 +58,29 @@ public class TokenService {
         return ValidTokenResponseDTO.builder()
                 .statusNum(result)
                 .build();
+    }
+
+    public RefreshTokenResponseDTO updateTokens(String accessToken, String refreshToken) {
+        String[] splitTokens = accessToken.split(":");
+
+        tokenProviderService.saveTokensToRedis(splitTokens[1], accessToken, refreshToken);
+
+        Social findSocial = userMapper.findSocialByUserName(splitTokens[1]);
+
+        int result = tokenProviderService.saveTokenToDatabase(splitTokens[0], findSocial.getUid(), accessToken, refreshToken);
+
+        if(result == 1){
+            return RefreshTokenResponseDTO.builder()
+                    .status(1)
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .build();
+        }else{
+            return RefreshTokenResponseDTO.builder()
+                    .status(4)
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .build();
+        }
     }
 }
