@@ -19,11 +19,13 @@ public class UserDetailService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        System.out.println("찾기전 :: " + username);
         User userByUserId = userMapper.findUserByUserId(username);
-        System.out.println("찾기후 :: " + userByUserId.getUserName());
-        if(userByUserId == null){
-            throw new UsernameNotFoundException(username);
+
+        if (userByUserId == null) {
+            throw new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + username);
+        }
+        if ("deleted".equalsIgnoreCase(userByUserId.getStatus())) {
+            throw new UsernameNotFoundException("탈퇴한 사용자입니다: " + username);
         }
 
         return CustomUserDetails.builder()

@@ -64,4 +64,23 @@
         FROM social
         WHERE user_id = #{userId};
     </select>
+
+    <update id="deleteUser" parameterType="String" useGeneratedKeys="true" keyProperty="uid">
+        UPDATE
+            user
+        SET
+            status = "deleted"
+        WHERE
+            user_id = #{userId};
+    </update>
+
+    <update id="deleteSocial" parameterType="String" useGeneratedKeys="true" keyProperty="uid">
+        UPDATE
+            social
+        SET
+            status = "deleted"
+        WHERE
+            user_id = #{userId};
+    </update>
+
 </mapper>
