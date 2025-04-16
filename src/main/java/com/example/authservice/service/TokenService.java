@@ -55,6 +55,7 @@ public class TokenService {
 
     public ValidTokenResponseDTO validateToken(String token) {
         int result = tokenProviderService.validToken("accessToken", token);
+        System.out.println("validate token result "+result);
         return ValidTokenResponseDTO.builder()
                 .statusNum(result)
                 .build();

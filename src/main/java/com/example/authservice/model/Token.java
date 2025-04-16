@@ -7,8 +7,8 @@ import lombok.Getter;
 @Builder
 public class Token {
     private int uid;
-    private int userUid;
-    private int socialUid;
+    private Integer userUid;
+    private Integer socialUid;
     private String accessToken;
     private String refreshToken;
 }

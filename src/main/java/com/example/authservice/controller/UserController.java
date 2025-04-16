@@ -36,7 +36,8 @@ public class UserController {
     }
 
     @PostMapping("/user/info")
-    public UserInfoResponseDTO getUserInfo(@RequestBody String token){
+    public UserInfoResponseDTO getUserInfo(HttpServletRequest request){
+        String token = request.getHeader("Authorization").substring(7);
         log.info("user info :: {}", token);
         return userService.getUserInfo(token);
     }
@@ -46,5 +47,12 @@ public class UserController {
         String token = request.getHeader("Authorization").substring(7);
         log.info("logout :: {}",token);
         return userService.logout(token);
+    }
+
+    @DeleteMapping("/user")
+    public LogoutResponseDTO deleteAccount(HttpServletRequest request){
+        String token = request.getHeader("Authorization").substring(7);
+        log.info("delete account :: {}", token);
+        return userService.deleteAccount(token);
     }
 }

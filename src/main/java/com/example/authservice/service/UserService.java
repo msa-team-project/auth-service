@@ -102,10 +102,9 @@ public class UserService {
             if(newSocial != null){
                 int result = userMapper.saveSocial(newSocial);
                 if(result == 1){
-                    Social social = userMapper.findSocialByUserName(oauthDTO.getName());
-
+                    Social social = userMapper.findSocialByUserId(newSocial.getUserId());
                     // redis에 저장
-                    tokenProviderService.saveTokensToRedis(social.getType().name()+":"+oauthDTO.getId(), oauthDTO.getAccessToken(), oauthDTO.getRefreshToken());
+                    tokenProviderService.saveTokensToRedis(tokens[0].toUpperCase()+":"+oauthDTO.getId(), oauthDTO.getAccessToken(), oauthDTO.getRefreshToken());
 
                     // DB에 저장
                     tokenProviderService.saveTokenToDatabase("social",social.getUid(),oauthDTO.getAccessToken(),oauthDTO.getRefreshToken());
@@ -238,18 +237,46 @@ public class UserService {
                         .build();
     }
 
-//    public UserInfoResponseDTO getUserInfo(String token) {
-//        String[] splitArr = token.split(":");
-//
-//        if("naver".equals(splitArr[0]) || "kakao".equals(splitArr[0]) || "google".equals(splitArr[0])){
-//            Social findSocial = userMapper.findSocialByUserId(splitArr[1]);
-//
-//            return UserInfoResponseDTO.builder()
-//                    .id((Long)findSocial.getUid())
-//
-//                    .build();
-//        }else{
-//
-//        }
-//    }
+    public UserInfoResponseDTO getUserInfo(String token) {
+        String[] splitArr = token.split(":");
+
+        if("naver".equals(splitArr[0]) || "kakao".equals(splitArr[0]) || "google".equals(splitArr[0])){
+            Social findSocial = userMapper.findSocialByUserId(splitArr[1]);
+
+            return UserInfoResponseDTO.builder()
+                    .id(Long.valueOf(findSocial.getUid()))
+                    .userId(findSocial.getUserId())
+                    .userName(findSocial.getUserName())
+                    .role(findSocial.getRole())
+                    .build();
+        }else{
+            User findUser = tokenProviderService.getTokenDetails(token);
+
+            return UserInfoResponseDTO.builder()
+                    .id(Long.valueOf(findUser.getUid()))
+                    .userId(findUser.getUserId())
+                    .userName(findUser.getUserName())
+                    .role(findUser.getRole())
+                    .build();
+        }
+    }
+
+    @Transactional
+    public LogoutResponseDTO deleteAccount(String token) {
+        LogoutResponseDTO removeTokenResult = logout(token);
+
+        String[] splitArr = token.split(":");
+
+        int result;
+
+        if("naver".equals(splitArr[0]) || "kakao".equals(splitArr[0]) || "google".equals(splitArr[0])){
+            result = userMapper.deleteSocial(splitArr[1]);
+        }else{
+            User findUser = tokenProviderService.getTokenDetails(token);
+            result = userMapper.deleteUser(findUser.getUserId());
+        }
+        return LogoutResponseDTO.builder()
+                .successed((result>0)&& removeTokenResult.isSuccessed())
+                .build();
+    }
 }

@@ -64,18 +64,20 @@ public class TokenProviderService {
                             splitTokenArr[0].equals("google")
             ){
                 String findTokenFromRedis;
-                
+
                 if(tokenType.equals("accessToken")){
-                    findTokenFromRedis = getAccessTokenFromRedis(splitTokenArr[1]);
+                    findTokenFromRedis = getAccessTokenFromRedis(splitTokenArr[0].toUpperCase() + ":" + splitTokenArr[1]);
                 }else if(tokenType.equals("refreshToken")){
-                    findTokenFromRedis = getRefreshTokenFromRedis(splitTokenArr[1]);
+                    findTokenFromRedis = getRefreshTokenFromRedis(splitTokenArr[0].toUpperCase() + ":" + splitTokenArr[1]);
                 }else{
                     findTokenFromRedis = null;
                 }
-
+                System.out.println("line 75 "+tokenType);
+                System.out.println("line 76 "+findTokenFromRedis);
+                System.out.println("line 77 "+token);
                 if(findTokenFromRedis == null){
                     return 2;
-                }else if(findTokenFromRedis.equals(splitTokenArr[2])){
+                }else if(findTokenFromRedis.equals(token)){
                     return 1;
                 }else{
                     return 3;
@@ -140,6 +142,7 @@ public class TokenProviderService {
     }
 
     public int saveTokenToDatabase(String type, int uid, String accessToken, String refreshToken) {
+        System.out.println("uid is :: " + uid);
         if("social".equals(type)){
             Token findToken = tokenMapper.findTokenBySocialUid(uid);
 
