@@ -42,6 +42,12 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'    // JWT 구현체
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // JSON 처리를 위한 Jackson 모듈
 
+    // spring에서 465포트(네이버)를 통해 메일을 보내줌
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // redis 통신 프레임워크
+    implementation 'io.lettuce:lettuce-core:6.2.1.RELEASE'
+
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'

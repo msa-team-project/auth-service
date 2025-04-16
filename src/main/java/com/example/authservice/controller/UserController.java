@@ -35,11 +35,11 @@ public class UserController {
         return userService.oauthLogin(oauthLoginRequestDTO);
     }
 
-    @PostMapping("/user/info")
-    public UserInfoResponseDTO getUserInfo(@RequestBody String token){
-        log.info("user info :: {}", token);
-        return userService.getUserInfo(token);
-    }
+//    @PostMapping("/user/info")
+//    public UserInfoResponseDTO getUserInfo(@RequestBody String token){
+//        log.info("user info :: {}", token);
+//        return userService.getUserInfo(token);
+//    }
 
     @PostMapping("/logout")
     public LogoutResponseDTO logout(HttpServletRequest request){
