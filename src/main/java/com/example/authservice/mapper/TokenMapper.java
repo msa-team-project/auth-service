@@ -7,9 +7,10 @@ import org.apache.ibatis.annotations.Mapper;
 public interface TokenMapper {
     int saveUserToken(Token token);
     int saveSocialToken(Token token);
-    Token findTokenByAccessToken(String accessToken);
-    Token findTokenByRefreshToken(String refreshToken);
+    Token findTokenByUserUid(int userUid);
+    Token findTokenBySocialUid(int socialUid);
     int updateUserToken(Token token);
     int updateSocialToken(Token token);
-    void deleteToken();
+    int deleteTokenByUserUid(int userUid);
+    int deleteTokenBySocialUid(int socialUid);
 }

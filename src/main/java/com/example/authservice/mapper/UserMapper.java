@@ -9,5 +9,6 @@ public interface UserMapper {
     User save(User user);
     User findUserByUserId(String userId);
     Social findSocialByUserName(String userName);
+    Social findSocialByUserId(String userId);
     int saveSocial(Social social);
 }

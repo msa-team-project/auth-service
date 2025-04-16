@@ -18,6 +18,12 @@ public class CustomUserDetails implements UserDetails {
     private User user;
     private List<String> roles;
 
+    // 테스트용 코드
+    public CustomUserDetails(User user, List<String> roles) {
+        this.user = user;
+        this.roles = roles;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()

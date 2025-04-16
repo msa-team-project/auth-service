@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 public class Social {
     private int uid;
+    private String userId;
     private String userName;
     private String email;
     private String emailyn;

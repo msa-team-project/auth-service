@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.SecretKey;
 import java.time.Duration;
@@ -120,62 +121,81 @@ public class TokenProviderService {
                 .build();
     }
 
-    // Redis에 accessToken과 refreshToken을 하나의 키에 해시로 저장
+    // Redis에 accessToken과 refreshToken을 저장
     public void saveTokensToRedis(String userId, String accessToken, String refreshToken) {
-        // Redis에 해시 저장 (userId -> {accessToken, refreshToken})
-        redisTemplate.opsForHash().put(userId, "accessToken", accessToken);
-        redisTemplate.opsForHash().put(userId, "refreshToken", refreshToken);
+        // accessToken 저장 + 2시간 만료
+        redisTemplate.opsForValue().set(userId + ":accessToken", accessToken, Duration.ofHours(2));
 
-        System.out.println("redis in accessToken :: " + getAccessTokenFromRedis(userId));
-        System.out.println("redis in refreshToken :: " + getRefreshTokenFromRedis(userId));
+        // refreshToken 저장 + 7일 만료
+        redisTemplate.opsForValue().set(userId + ":refreshToken", refreshToken, Duration.ofDays(7));
     }
 
     // Redis에서 accessToken과 refreshToken을 조회
     public String getAccessTokenFromRedis(String userId) {
-        return (String) redisTemplate.opsForHash().get(userId, "accessToken");
+        return (String) redisTemplate.opsForValue().get(userId + ":accessToken");
     }
 
     public String getRefreshTokenFromRedis(String userId) {
-        return (String) redisTemplate.opsForHash().get(userId, "refreshToken");
+        return (String) redisTemplate.opsForValue().get(userId + ":refreshToken");
     }
 
     public int saveTokenToDatabase(String type, int uid, String accessToken, String refreshToken) {
         if("social".equals(type)){
-            return tokenMapper.saveSocialToken(
-                    Token.builder()
-                            .socialUid(uid)
-                            .accessToken(accessToken)
-                            .refreshToken(refreshToken)
-                            .build()
-            );
+            Token findToken = tokenMapper.findTokenBySocialUid(uid);
+
+            if (findToken != null) {
+                return tokenMapper.updateSocialToken(
+                        Token.builder()
+                                .socialUid(uid)
+                                .accessToken(accessToken)
+                                .refreshToken(refreshToken)
+                                .build()
+                );
+            }else{
+                return tokenMapper.saveSocialToken(
+                        Token.builder()
+                                .socialUid(uid)
+                                .accessToken(accessToken)
+                                .refreshToken(refreshToken)
+                                .build()
+                );
+            }
         }else{
-            return tokenMapper.saveUserToken(
-                    Token.builder()
-                            .userUid(uid)
-                            .accessToken(accessToken)
-                            .refreshToken(refreshToken)
-                            .build()
-            );
+            Token findToken = tokenMapper.findTokenByUserUid(uid);
+
+            if (findToken != null) {
+                return tokenMapper.updateUserToken(
+                        Token.builder()
+                                .userUid(uid)
+                                .accessToken(accessToken)
+                                .refreshToken(refreshToken)
+                                .build()
+                );
+            }else{
+                return tokenMapper.saveUserToken(
+                        Token.builder()
+                                .userUid(uid)
+                                .accessToken(accessToken)
+                                .refreshToken(refreshToken)
+                                .build()
+                );
+            }
         }
     }
 
-    public int updateTokenToDatabase(String type, int uid, String accessToken, String refreshToken) {
+    @Transactional
+    public boolean deleteTokenToRedis(String type, String userid){
+        boolean resultAccessToken = redisTemplate.delete(type + ":" + userid + ":accessToken");
+        boolean resultRefreshToken = redisTemplate.delete(type + ":" + userid + ":refreshToken");
+
+        return resultAccessToken && resultRefreshToken;
+    }
+
+    public boolean deleteTokenToDatabase(String type, int uid){
         if("social".equals(type)){
-            return tokenMapper.updateSocialToken(
-                    Token.builder()
-                            .socialUid(uid)
-                            .accessToken(accessToken)
-                            .refreshToken(refreshToken)
-                            .build()
-            );
+            return tokenMapper.deleteTokenBySocialUid(uid)>0;
         }else{
-            return tokenMapper.updateUserToken(
-                    Token.builder()
-                            .userUid(uid)
-                            .accessToken(accessToken)
-                            .refreshToken(refreshToken)
-                            .build()
-            );
+            return tokenMapper.deleteTokenByUserUid(uid)>0;
         }
     }
 

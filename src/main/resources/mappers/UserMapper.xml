@@ -21,6 +21,7 @@
     </resultMap>
     <resultMap id="socialResultMap" type="Social">
         <result property="uid" column="uid"/>
+        <result property="userId" column="user_id"/>
         <result property="userName" column="user_name"/>
         <result property="email" column="email"/>
         <result property="emailyn" column="emailyn"/>
@@ -48,13 +49,19 @@
     </select>
 
     <insert id="saveSocial" parameterType="Social" useGeneratedKeys="true" keyProperty="uid">
-        INSERT INTO social (user_name,email,emailyn,phone,phoneyn,main_address,sub_address_1,sub_address_2,type,role)
-        VALUES (#{userName}, #{email}, #{emailyn}, #{phone}, #{phoneyn}, #{mainAddress}, #{subAddress1}, #{subAddress2},#{type},#{role});
+        INSERT INTO social (user_id,user_name,email,emailyn,phone,phoneyn,main_address,sub_address_1,sub_address_2,type,role)
+        VALUES (#{userId}, #{userName}, #{email}, #{emailyn}, #{phone}, #{phoneyn}, #{mainAddress}, #{subAddress1}, #{subAddress2},#{type},#{role});
     </insert>
 
     <select id="findSocialByUserName" parameterType="String" resultMap="socialResultMap">
-        SELECT uid, user_name, email, emailyn, phone, phoneyn, main_address, sub_address_1, sub_address_2, type, point, role, status, created_date
+        SELECT uid, user_id, user_name, email, emailyn, phone, phoneyn, main_address, sub_address_1, sub_address_2, type, point, role, status, created_date
         FROM social
         WHERE user_name = #{userName};
+    </select>
+
+    <select id="findSocialByUserId" parameterType="String" resultMap="socialResultMap">
+        SELECT uid, user_id, user_name, email, emailyn, phone, phoneyn, main_address, sub_address_1, sub_address_2, type, point, role, status, created_date
+        FROM social
+        WHERE user_id = #{userId};
     </select>
 </mapper>

@@ -1,10 +1,7 @@
 package com.example.authservice.service;
 
 import com.example.authservice.config.security.CustomUserDetails;
-import com.example.authservice.dto.OAuthLoginRequestDTO;
-import com.example.authservice.dto.OAuthLoginResponseDTO;
-import com.example.authservice.dto.UserJoinResponseDTO;
-import com.example.authservice.dto.UserLoginResponseDTO;
+import com.example.authservice.dto.*;
 import com.example.authservice.mapper.TokenMapper;
 import com.example.authservice.mapper.UserMapper;
 import com.example.authservice.model.Social;
@@ -52,7 +49,7 @@ public class UserService {
         tokenProviderService.saveTokensToRedis("USER:"+user.getUserId(), accessToken, refreshToken);
 
         // DB에 저장
-        tokenProviderService.updateTokenToDatabase("user",user.getUid(), accessToken, refreshToken);
+        tokenProviderService.saveTokenToDatabase("user",user.getUid(), accessToken, refreshToken);
 
         return UserLoginResponseDTO.builder()
                 .loggedIn(true)
@@ -145,7 +142,7 @@ public class UserService {
                 tokenProviderService.saveTokensToRedis(findSocial.getType().name()+":"+oauthDTO.getId(), oauthDTO.getAccessToken(), oauthDTO.getRefreshToken());
 
                 // DB에 저장
-                tokenProviderService.updateTokenToDatabase("social",findSocial.getUid(),oauthDTO.getAccessToken(),oauthDTO.getRefreshToken());
+                tokenProviderService.saveTokenToDatabase("social",findSocial.getUid(),oauthDTO.getAccessToken(),oauthDTO.getRefreshToken());
                 
                 return OAuthLoginResponseDTO.builder()
                             .loggedIn(true)
@@ -167,9 +164,10 @@ public class UserService {
         }
     }
 
-    private Social buildNewSocialObj (String type, OAuthLoginRequestDTO oauthDTO) {
+    protected Social buildNewSocialObj (String type, OAuthLoginRequestDTO oauthDTO) {
         if("naver".equals(type)){
             return Social.builder()
+                    .userId(oauthDTO.getId())
                     .userName(oauthDTO.getName())
                     .email("")
                     .emailyn("n")
@@ -183,6 +181,7 @@ public class UserService {
                     .build();
         }else if("google".equals(type)){
             return Social.builder()
+                    .userId(oauthDTO.getId())
                     .userName(oauthDTO.getName())
                     .email(oauthDTO.getEmail())
                     .emailyn("n")
@@ -197,6 +196,7 @@ public class UserService {
         }else if("kakao".equals(type)){
             // 지금은 정보요청 권한이 없어서 닉네임만 받아올수 있음
             return Social.builder()
+                    .userId(oauthDTO.getId())
                     .userName(oauthDTO.getNickname())
                     .email("")
                     .emailyn("n")
@@ -212,4 +212,44 @@ public class UserService {
             return null;
         }
     }
+
+    public LogoutResponseDTO logout(String token) {
+        String[] splitArr = token.split(":");
+        boolean redisResult;
+        boolean dbResult;
+
+        if("naver".equals(splitArr[0]) || "kakao".equals(splitArr[0]) || "google".equals(splitArr[0])){
+            redisResult = tokenProviderService.deleteTokenToRedis(splitArr[0].toUpperCase(),splitArr[1]);
+            System.out.println("userId is :: " + splitArr[1]);
+            Social findSocial = userMapper.findSocialByUserId(splitArr[1]);
+            dbResult = tokenProviderService.deleteTokenToDatabase("social",findSocial.getUid());
+        }else{
+            String resultUserId = tokenProviderService.getTokenDetails(token).getUserId();
+            redisResult = tokenProviderService.deleteTokenToRedis("USER",resultUserId);
+            User user = userMapper.findUserByUserId(resultUserId);
+            dbResult = tokenProviderService.deleteTokenToDatabase("user",user.getUid());
+        }
+        return redisResult&&dbResult?
+                LogoutResponseDTO.builder()
+                        .successed(true)
+                        .build() :
+                LogoutResponseDTO.builder()
+                        .successed(false)
+                        .build();
+    }
+
+//    public UserInfoResponseDTO getUserInfo(String token) {
+//        String[] splitArr = token.split(":");
+//
+//        if("naver".equals(splitArr[0]) || "kakao".equals(splitArr[0]) || "google".equals(splitArr[0])){
+//            Social findSocial = userMapper.findSocialByUserId(splitArr[1]);
+//
+//            return UserInfoResponseDTO.builder()
+//                    .id((Long)findSocial.getUid())
+//
+//                    .build();
+//        }else{
+//
+//        }
+//    }
 }
