@@ -6,7 +6,7 @@ on:
     types: [opened, synchronize, reopened]
 
 # 2단계
-permissions: write-all
+permissions: write
 
 # 3단계
 jobs:
