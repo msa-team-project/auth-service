@@ -26,7 +26,7 @@ public class UserController {
     @PostMapping("/join")
     public UserJoinResponseDTO join(@RequestBody UserJoinRequestDTO userJoinRequestDTO) {
         log.info("join :: {}", userJoinRequestDTO.getUserName() + " " + userJoinRequestDTO.getEmail());
-        return userService.join(userJoinRequestDTO.toUser(bCryptPasswordEncoder));
+        return userService.join(userJoinRequestDTO.toUser(bCryptPasswordEncoder),userJoinRequestDTO.toAddress());
     }
 
     @PostMapping("/login/oauth")

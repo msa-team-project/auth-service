@@ -17,7 +17,6 @@ public class User {
     private String emailyn;
     private String phone;
     private String phoneyn;
-    private Address address;
     private int point;
     private Role role;
     private String status;
