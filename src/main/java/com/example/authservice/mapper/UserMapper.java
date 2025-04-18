@@ -23,5 +23,5 @@ public interface UserMapper {
     int saveSocial(Social social);
     int deleteUser(String userId);
     int deleteSocial(String userId);
-
+    int activeSocial(String userId);
 }

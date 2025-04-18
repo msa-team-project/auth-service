@@ -77,4 +77,13 @@
             user_id = #{userId};
     </update>
 
+    <update id="activeSocial" parameterType="String" useGeneratedKeys="true" keyProperty="uid">
+        UPDATE
+            social
+        SET
+            status = "active"
+        WHERE
+            user_id = #{userId};
+    </update>
+
 </mapper>
