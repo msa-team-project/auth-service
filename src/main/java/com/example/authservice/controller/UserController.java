@@ -42,6 +42,13 @@ public class UserController {
         return userService.getUserInfo(token);
     }
 
+    @PostMapping("/profile")
+    public ProfileResponseDTO getUserProfile(HttpServletRequest request){
+        String token = request.getHeader("Authorization").substring(7);
+        log.info("user profile :: {}", token);
+        return userService.getUserProfile(token);
+    }
+
     @PostMapping("/logout")
     public LogoutResponseDTO logout(HttpServletRequest request){
         String token = request.getHeader("Authorization").substring(7);

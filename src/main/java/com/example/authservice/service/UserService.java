@@ -319,4 +319,18 @@ public class UserService {
                 .role(saved.getRole())
                 .build();
     }
+
+    public ProfileResponseDTO getUserProfile(String token) {
+        String[] splitArr = token.split(":");
+
+        if("naver".equals(splitArr[0]) || "kakao".equals(splitArr[0]) || "google".equals(splitArr[0])){
+            Social findSocial = userMapper.findSocialByUserId(splitArr[1]);
+
+            // Address userAddress =
+        }else{
+
+        }
+
+        return null;
+    }
 }
