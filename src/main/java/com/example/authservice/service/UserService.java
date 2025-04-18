@@ -67,10 +67,10 @@ public class UserService {
     @Transactional
     public UserJoinResponseDTO join(User user){
 
-        String email = user.getEmail();
-        if (!redisUtil.existData(email + ":verified") || !"true".equals(redisUtil.getData(email + ":verified"))) {
-            throw new RuntimeException("이메일 인증이 필요합니다.");
-        }
+//        String email = user.getEmail();
+//        if (!redisUtil.existData(email + ":verified") || !"true".equals(redisUtil.getData(email + ":verified"))) {
+//            throw new RuntimeException("이메일 인증이 필요합니다.");
+//        }
 
         User result = userMapper.save(user);
         //주소 추가
@@ -81,7 +81,7 @@ public class UserService {
                     .build();
         }else{
             // 가입 성공 후 인증 플래그 제거
-            redisUtil.deleteData(email + ":verified");
+            //redisUtil.deleteData(email + ":verified");
 
             return UserJoinResponseDTO.builder()
                     .isSuccess(true)
@@ -155,7 +155,9 @@ public class UserService {
             System.out.println("find type is :: " + findSocial.getType().name());
             System.out.println("tokens type is :: " + tokens[0]);
             if(findSocial.getType().name().toLowerCase().equals(tokens[0])){
-
+                if("deleted".equals(findSocial.getStatus())){
+                    userMapper.activeSocial(findSocial.getUserId());
+                }
                 // redis에 저장
                 tokenProviderService.saveTokensToRedis(findSocial.getType().name()+":"+oauthDTO.getId(), oauthDTO.getAccessToken(), oauthDTO.getRefreshToken());
 
@@ -173,6 +175,7 @@ public class UserService {
                             .refreshToken(oauthDTO.getRefreshToken())
                             .build();
             }else{
+                // 아직 탈퇴처리된 계정이 있더라도 존재한다고 메세지 보냄
                 return OAuthLoginResponseDTO.builder()
                         .loggedIn(false)
                         .type(findSocial.getType())
@@ -234,6 +237,7 @@ public class UserService {
             dbResult = tokenProviderService.deleteTokenToDatabase("social",findSocial.getUid());
         }else{
             String resultUserId = tokenProviderService.getTokenDetails(token).getUserId();
+            System.out.println("Line 240 :: " + resultUserId);
             redisResult = tokenProviderService.deleteTokenToRedis("USER",resultUserId);
             User user = userMapper.findUserByUserId(resultUserId);
             dbResult = tokenProviderService.deleteTokenToDatabase("user",user.getUid());
@@ -310,7 +314,7 @@ public class UserService {
                 .emailyn(saved.getEmailyn())
                 .phone(saved.getPhone())
                 .phoneyn(saved.getPhoneyn())
-                .address(saved.getAddress())
+                //.address(saved.getAddress())
                 .point(saved.getPoint())
                 .role(saved.getRole())
                 .build();
