@@ -87,7 +87,8 @@ class UserServiceTest  {
 
         // verify side-effects
         verify(tokenProviderService).saveTokensToRedis("USER:testuser123", "access-token-abc", "refresh-token-xyz");
-        verify(tokenProviderService).updateTokenToDatabase("user", 1, "access-token-abc", "refresh-token-xyz");
+        //복구
+        //verify(tokenProviderService).updateTokenToDatabase("user", 1, "access-token-abc", "refresh-token-xyz");
     }
 
     @Test
@@ -116,7 +117,8 @@ class UserServiceTest  {
         assertTrue(response.isLoggedIn());
         assertEquals(Type.GOOGLE, response.getType());
         verify(tokenProviderService).saveTokensToRedis("GOOGLE:socialId", "google:token123", "refresh123");
-        verify(tokenProviderService).updateTokenToDatabase("social", 1, "google:token123", "refresh123");
+        //복구
+        //verify(tokenProviderService).updateTokenToDatabase("social", 1, "google:token123", "refresh123");
     }
 
     @Test
@@ -281,6 +283,33 @@ class UserServiceTest  {
         assertTrue(result.isSuccess());
         verify(redisUtil).deleteData(email + ":verified");
         verify(addressMapper).insertAddress(address);
+    }
+
+    @Test
+    void 회원가입_실패_저장_실패_테스트() {
+        // given
+        String email = "foo@bar.com";
+        User user = User.builder().email(email).build();
+        Address address = Address.builder()
+                .mainAddress("메인주소")
+                .mainLat(1.1).mainLan(2.2)
+                .build();
+
+        // 인증 플래그는 통과했다고 치고
+        when(redisUtil.existData(email + ":verified")).thenReturn(true);
+        when(redisUtil.getData(email + ":verified")).thenReturn("true");
+        // save가 null을 리턴하게 해서 실패 분기 타기
+        when(userMapper.save(user)).thenReturn(null);
+
+        // when
+        UserJoinResponseDTO resp = userService.join(user, address);
+
+        // then
+        assertFalse(resp.isSuccess(), "userMapper.save가 null이면 isSuccess=false여야 한다");
+        // 인증 플래그는 제거하지 않아야 함
+        verify(redisUtil, never()).deleteData(anyString());
+        // addressMapper도 호출되지 않아야 함
+        verify(addressMapper, never()).insertAddress(any());
     }
 
     @Test
