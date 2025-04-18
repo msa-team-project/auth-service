@@ -15,4 +15,6 @@ public interface AddressMapper {
         return address;
     }
 
+    Address findByUserUid(Integer userUid);
+    void updateAddress(Address address);
 }

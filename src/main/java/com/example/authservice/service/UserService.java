@@ -293,26 +293,38 @@ public class UserService {
                 .build();
     }
 
-//    //주소 변경 (수정 중)
-//    @Transactional
-//    public User updateAddress(int uid, UpdateAddressRequestDTO request) {
-//        // 1) DB에서 유저 조회
-//        User user = userMapper.findUserByUserUid(uid);
-//        // 2) 주소 변경 (수정 중)
-//        // 3) 저장
-//        User saved = userMapper.save(user);
-//
-//        // 4) 변경된 후 사용자 정보 반환
-//        return User.builder()
-//                .userId(saved.getUserId())
-//                .userName(saved.getUserName())
-//                .email(saved.getEmail())
-//                .emailyn(saved.getEmailyn())
-//                .phone(saved.getPhone())
-//                .phoneyn(saved.getPhoneyn())
-//                .address(saved.getAddress())
-//                .point(saved.getPoint())
-//                .role(saved.getRole())
-//                .build();
-//    }
+    //주소 변경
+    @Transactional
+    public UpdateAddressResponseDTO updateAddress(int uid, UpdateAddressRequestDTO request) {
+        // 1) 유저 존재 확인 (선택)
+        User user = userMapper.findUserByUserUid(uid);
+        if (user == null) {
+            throw new IllegalArgumentException("존재하지 않는 사용자 UID: " + uid);
+        }
+
+        // 2) 기존 Address 조회
+        Address address = addressMapper.findByUserUid(user.getUid());
+        if (address == null) {
+            throw new IllegalArgumentException("주소 정보가 없습니다. userUid=" + uid);
+        }
+
+        // 3) Address 엔티티에 변경 사항 반영
+        address.setMainAddress(request.getMainAddress());
+        address.setSubAddress1(request.getSubAddress1());
+        address.setSubAddress2(request.getSubAddress2());
+        address.setMainLat(request.getMainLat());
+        address.setMainLan(request.getMainLan());
+        address.setSub1Lat(request.getSubLat1());
+        address.setSub1Lan(request.getSubLan1());
+        address.setSub2Lat(request.getSubLat2());
+        address.setSub2Lan(request.getSubLan2());
+
+        // 4) DB 업데이트
+        addressMapper.updateAddress(address);
+
+        // 5) 결과 DTO 리턴
+        return UpdateAddressResponseDTO.builder()
+                .isSuccess(true)
+                .build();
+    }
 }

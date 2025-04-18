@@ -58,7 +58,8 @@ public class UserController {
 
     //주소 수정
     @PutMapping("/{uid}/address")
-    public void updateUserAddress(@PathVariable int uid, @RequestBody UpdateAddressRequestDTO request) {
+    public UpdateAddressResponseDTO updateUserAddress(@PathVariable int uid, @RequestBody UpdateAddressRequestDTO request) {
         log.info("update user address :: {}", request);
+        return userService.updateAddress(uid,request);
     }
 }
