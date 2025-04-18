@@ -87,8 +87,7 @@ class UserServiceTest  {
 
         // verify side-effects
         verify(tokenProviderService).saveTokensToRedis("USER:testuser123", "access-token-abc", "refresh-token-xyz");
-        //복구
-        //verify(tokenProviderService).updateTokenToDatabase("user", 1, "access-token-abc", "refresh-token-xyz");
+        verify(tokenProviderService).updateTokenToDatabase("user", 1, "access-token-abc", "refresh-token-xyz");
     }
 
     @Test
@@ -117,8 +116,7 @@ class UserServiceTest  {
         assertTrue(response.isLoggedIn());
         assertEquals(Type.GOOGLE, response.getType());
         verify(tokenProviderService).saveTokensToRedis("GOOGLE:socialId", "google:token123", "refresh123");
-        //복구
-        //verify(tokenProviderService).updateTokenToDatabase("social", 1, "google:token123", "refresh123");
+        verify(tokenProviderService).updateTokenToDatabase("social", 1, "google:token123", "refresh123");
     }
 
     @Test
