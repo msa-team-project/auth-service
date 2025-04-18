@@ -17,9 +17,7 @@ public class Social {
     private String emailyn;
     private String phone;
     private String phoneyn;
-    private String mainAddress;
-    private String subAddress1;
-    private String subAddress2;
+    private Address address;
     private Type type;
     private int point;
     private Role role;

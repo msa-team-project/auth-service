@@ -17,9 +17,11 @@ public interface UserMapper {
     }
 
     User findUserByUserId(String userId);
+    User findUserByUserUid(int uid);
     Social findSocialByUserName(String userName);
     Social findSocialByUserId(String userId);
     int saveSocial(Social social);
     int deleteUser(String userId);
     int deleteSocial(String userId);
+
 }

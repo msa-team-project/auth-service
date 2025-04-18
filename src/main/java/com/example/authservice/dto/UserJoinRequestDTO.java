@@ -1,5 +1,6 @@
 package com.example.authservice.dto;
 
+import com.example.authservice.model.Address;
 import com.example.authservice.model.User;
 import com.example.authservice.type.Role;
 import lombok.Getter;
@@ -14,9 +15,7 @@ public class UserJoinRequestDTO {
     private String emailyn;
     private String phone;
     private String phoneyn;
-    private String mainAddress;
-    private String subAddress1;
-    private String subAddress2;
+    private Address address;
     private Role role;
 
     public User toUser(BCryptPasswordEncoder bCryptPasswordEncoder) {
@@ -28,10 +27,9 @@ public class UserJoinRequestDTO {
                 .emailyn(emailyn)
                 .phone(phone)
                 .phoneyn(phoneyn)
-                .mainAddress(mainAddress)
-                .subAddress1(subAddress1)
-                .subAddress2(subAddress2)
                 .role(role)
                 .build();
     }
+    
+    //나중에 필요하면 toAddress 추가하기
 }

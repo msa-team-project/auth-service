@@ -55,4 +55,10 @@ public class UserController {
         log.info("delete account :: {}", token);
         return userService.deleteAccount(token);
     }
+
+    //주소 수정
+    @PutMapping("/{uid}/address")
+    public void updateUserAddress(@PathVariable int uid, @RequestBody UpdateAddressRequestDTO request) {
+        log.info("update user address :: {}", request);
+    }
 }
