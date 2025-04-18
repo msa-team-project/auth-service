@@ -15,7 +15,15 @@ public class UserJoinRequestDTO {
     private String emailyn;
     private String phone;
     private String phoneyn;
-    private Address address;
+    private String mainAddress;
+    private String subAddress1;
+    private String subAddress2;
+    private double mainLat;
+    private double mainLan;
+    private double subLat1;
+    private double subLan1;
+    private double subLat2;
+    private double subLan2;
     private Role role;
 
     public User toUser(BCryptPasswordEncoder bCryptPasswordEncoder) {
@@ -30,6 +38,18 @@ public class UserJoinRequestDTO {
                 .role(role)
                 .build();
     }
-    
-    //나중에 필요하면 toAddress 추가하기
+
+    public Address toAddress() {
+        return Address.builder()
+                .mainAddress(mainAddress)
+                .subAddress1(subAddress1)
+                .subAddress2(subAddress2)
+                .mainLat(mainLat)
+                .mainLan(mainLan)
+                .sub1Lat(subLat1)
+                .sub1Lan(subLan1)
+                .sub2Lat(subLat2)
+                .sub2Lan(subLan2)
+                .build();
+    }
 }

@@ -26,7 +26,7 @@ public class UserController {
     @PostMapping("/join")
     public UserJoinResponseDTO join(@RequestBody UserJoinRequestDTO userJoinRequestDTO) {
         log.info("join :: {}", userJoinRequestDTO.getUserName() + " " + userJoinRequestDTO.getEmail());
-        return userService.join(userJoinRequestDTO.toUser(bCryptPasswordEncoder));
+        return userService.join(userJoinRequestDTO.toUser(bCryptPasswordEncoder),userJoinRequestDTO.toAddress());
     }
 
     @PostMapping("/login/oauth")
@@ -65,7 +65,8 @@ public class UserController {
 
     //주소 수정
     @PutMapping("/{uid}/address")
-    public void updateUserAddress(@PathVariable int uid, @RequestBody UpdateAddressRequestDTO request) {
+    public UpdateAddressResponseDTO updateUserAddress(@PathVariable int uid, @RequestBody UpdateAddressRequestDTO request) {
         log.info("update user address :: {}", request);
+        return userService.updateAddress(uid,request);
     }
 }

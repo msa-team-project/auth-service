@@ -17,6 +17,34 @@
         <result property="sub2Lan" column="sub2_Lan"/>
     </resultMap>
 
+    <insert id="insertAddress" parameterType="Address" useGeneratedKeys="true" keyProperty="uid">
+        INSERT INTO user_address (user_uid,social_uid,main_address,sub_address1,sub_address2,main_lat,main_lan,sub1_lat,sub1_lan,sub2_lat,sub2_lan)
+        VALUES (#{userUid},#{socialUid}, #{mainAddress}, #{subAddress1}, #{subAddress2}, #{mainLat},#{mainLan},#{sub1Lat},#{sub1Lan},#{sub2Lat},#{sub2Lan});
+    </insert>
 
+    <select id="findByUserUid"
+            parameterType="int"
+            resultMap="addressResultMap">
+        SELECT uid,user_uid, social_uid, main_address, sub_address1, sub_address2, main_lat, main_lan, sub1_lat, sub1_lan, sub2_lat, sub2_lan
+        FROM user_address
+        WHERE user_uid = #{userUid}
+    </select>
+
+
+    <update id="updateAddress" parameterType="com.example.authservice.model.Address">
+        UPDATE user_address
+        <set>
+            main_address  = #{mainAddress},
+            sub_address1  = #{subAddress1},
+            sub_address2  = #{subAddress2},
+            main_lat      = #{mainLat},
+            main_lan      = #{mainLan},
+            sub1_lat      = #{sub1Lat},
+            sub1_lan      = #{sub1Lan},
+            sub2_lat      = #{sub2Lat},
+            sub2_lan      = #{sub2Lan}
+        </set>
+        WHERE user_uid = #{userUid}
+    </update>
 
 </mapper>

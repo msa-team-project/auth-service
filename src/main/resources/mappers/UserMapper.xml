@@ -42,6 +42,12 @@
         WHERE user_id = #{userId};
     </select>
 
+    <select id="findUserByUserUid" parameterType="Integer" resultMap="userResultMap">
+        SELECT uid, user_id, password, user_name, email, emailyn, phone, phoneyn, point, role, status, created_date
+        FROM user
+        WHERE uid = #{uid};
+    </select>
+
     <insert id="saveSocial" parameterType="Social" useGeneratedKeys="true" keyProperty="uid">
         INSERT INTO social (user_id,user_name,email,emailyn,phone,phoneyn,type,role)
         VALUES (#{userId}, #{userName}, #{email}, #{emailyn}, #{phone}, #{phoneyn},#{type},#{role});

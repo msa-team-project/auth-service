@@ -8,14 +8,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-import javax.naming.Context;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Random;
 
 @RequiredArgsConstructor
@@ -65,7 +63,7 @@ public class EmailService {
 
         MimeMessage message = mailSender.createMimeMessage();
         message.addRecipients(MimeMessage.RecipientType.TO, email);
-        message.setSubject("안녕하세요 인증번호입니다.");
+        message.setSubject("[Sandit] 이메일 인증 코드 메일입니다.");
         message.setFrom(configEmail);
         message.setText(setContext(authCode), "utf-8", "html");
 

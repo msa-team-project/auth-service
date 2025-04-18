@@ -3,6 +3,7 @@ package com.example.authservice.service;
 import com.example.authservice.config.redis.RedisUtil;
 import com.example.authservice.config.security.CustomUserDetails;
 import com.example.authservice.dto.*;
+import com.example.authservice.mapper.AddressMapper;
 import com.example.authservice.mapper.TokenMapper;
 import com.example.authservice.mapper.UserMapper;
 import com.example.authservice.model.Address;
@@ -29,6 +30,7 @@ import static com.example.authservice.type.Type.*;
 public class UserService {
 
     private final UserMapper userMapper;
+    private final AddressMapper addressMapper;
     private final AuthenticationManager authenticationManager;
     private final TokenProviderService tokenProviderService;
     private final EmailService emailService;
@@ -65,15 +67,16 @@ public class UserService {
     }
 
     @Transactional
-    public UserJoinResponseDTO join(User user){
+    public UserJoinResponseDTO join(User user, Address address) {
 
-//        String email = user.getEmail();
-//        if (!redisUtil.existData(email + ":verified") || !"true".equals(redisUtil.getData(email + ":verified"))) {
-//            throw new RuntimeException("이메일 인증이 필요합니다.");
-//        }
+        String email = user.getEmail();
+        if (!redisUtil.existData(email + ":verified") || !"true".equals(redisUtil.getData(email + ":verified"))) {
+            throw new RuntimeException("이메일 인증이 필요합니다.");
+        }
 
         User result = userMapper.save(user);
-        //주소 추가
+        address.setUserUid(result.getUid());
+        addressMapper.insertAddress(address);
 
         if(result == null){
             return UserJoinResponseDTO.builder()
@@ -81,7 +84,7 @@ public class UserService {
                     .build();
         }else{
             // 가입 성공 후 인증 플래그 제거
-            //redisUtil.deleteData(email + ":verified");
+            redisUtil.deleteData(email + ":verified");
 
             return UserJoinResponseDTO.builder()
                     .isSuccess(true)
@@ -155,9 +158,7 @@ public class UserService {
             System.out.println("find type is :: " + findSocial.getType().name());
             System.out.println("tokens type is :: " + tokens[0]);
             if(findSocial.getType().name().toLowerCase().equals(tokens[0])){
-                if("deleted".equals(findSocial.getStatus())){
-                    userMapper.activeSocial(findSocial.getUserId());
-                }
+
                 // redis에 저장
                 tokenProviderService.saveTokensToRedis(findSocial.getType().name()+":"+oauthDTO.getId(), oauthDTO.getAccessToken(), oauthDTO.getRefreshToken());
 
@@ -175,7 +176,6 @@ public class UserService {
                             .refreshToken(oauthDTO.getRefreshToken())
                             .build();
             }else{
-                // 아직 탈퇴처리된 계정이 있더라도 존재한다고 메세지 보냄
                 return OAuthLoginResponseDTO.builder()
                         .loggedIn(false)
                         .type(findSocial.getType())
@@ -237,7 +237,6 @@ public class UserService {
             dbResult = tokenProviderService.deleteTokenToDatabase("social",findSocial.getUid());
         }else{
             String resultUserId = tokenProviderService.getTokenDetails(token).getUserId();
-            System.out.println("Line 240 :: " + resultUserId);
             redisResult = tokenProviderService.deleteTokenToRedis("USER",resultUserId);
             User user = userMapper.findUserByUserId(resultUserId);
             dbResult = tokenProviderService.deleteTokenToDatabase("user",user.getUid());
@@ -275,6 +274,20 @@ public class UserService {
         }
     }
 
+    public ProfileResponseDTO getUserProfile(String token) {
+        String[] splitArr = token.split(":");
+
+        if("naver".equals(splitArr[0]) || "kakao".equals(splitArr[0]) || "google".equals(splitArr[0])){
+            Social findSocial = userMapper.findSocialByUserId(splitArr[1]);
+
+            // Address userAddress =
+        }else{
+
+        }
+
+        return null;
+    }
+
     @Transactional
     public LogoutResponseDTO deleteAccount(String token) {
         LogoutResponseDTO removeTokenResult = logout(token);
@@ -294,43 +307,38 @@ public class UserService {
                 .build();
     }
 
-    //주소 변경 (수정 중)
+    //주소 변경
     @Transactional
-    public User updateAddress(int uid, UpdateAddressRequestDTO request) {
-        // 1) DB에서 유저 조회
+    public UpdateAddressResponseDTO updateAddress(int uid, UpdateAddressRequestDTO request) {
+        // 1) 유저 존재 확인 (선택)
         User user = userMapper.findUserByUserUid(uid);
-        // 2) 주소 변경 (수정 중)
-//        User.builder(
-//                .address()
-//        );
-        // 3) 저장
-        User saved = userMapper.save(user);
-
-        // 4) 변경된 후 사용자 정보 반환
-        return User.builder()
-                .userId(saved.getUserId())
-                .userName(saved.getUserName())
-                .email(saved.getEmail())
-                .emailyn(saved.getEmailyn())
-                .phone(saved.getPhone())
-                .phoneyn(saved.getPhoneyn())
-                //.address(saved.getAddress())
-                .point(saved.getPoint())
-                .role(saved.getRole())
-                .build();
-    }
-
-    public ProfileResponseDTO getUserProfile(String token) {
-        String[] splitArr = token.split(":");
-
-        if("naver".equals(splitArr[0]) || "kakao".equals(splitArr[0]) || "google".equals(splitArr[0])){
-            Social findSocial = userMapper.findSocialByUserId(splitArr[1]);
-
-            // Address userAddress =
-        }else{
-
+        if (user == null) {
+            throw new IllegalArgumentException("존재하지 않는 사용자 UID: " + uid);
         }
 
-        return null;
+        // 2) 기존 Address 조회
+        Address address = addressMapper.findByUserUid(user.getUid());
+        if (address == null) {
+            throw new IllegalArgumentException("주소 정보가 없습니다. userUid=" + uid);
+        }
+
+        // 3) Address 엔티티에 변경 사항 반영
+        address.setMainAddress(request.getMainAddress());
+        address.setSubAddress1(request.getSubAddress1());
+        address.setSubAddress2(request.getSubAddress2());
+        address.setMainLat(request.getMainLat());
+        address.setMainLan(request.getMainLan());
+        address.setSub1Lat(request.getSubLat1());
+        address.setSub1Lan(request.getSubLan1());
+        address.setSub2Lat(request.getSubLat2());
+        address.setSub2Lan(request.getSubLan2());
+
+        // 4) DB 업데이트
+        addressMapper.updateAddress(address);
+
+        // 5) 결과 DTO 리턴
+        return UpdateAddressResponseDTO.builder()
+                .isSuccess(true)
+                .build();
     }
 }
