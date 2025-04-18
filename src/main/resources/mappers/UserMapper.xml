@@ -11,9 +11,6 @@
         <result property="emailyn" column="emailyn"/>
         <result property="phone" column="phone"/>
         <result property="phoneyn" column="phoneyn"/>
-        <result property="mainAddress" column="main_address"/>
-        <result property="subAddress1" column="sub_address_1"/>
-        <result property="subAddress2" column="sub_address_2"/>
         <result property="point" column="point"/>
         <result property="role" column="role"/>
         <result property="status" column="status"/>
@@ -27,9 +24,6 @@
         <result property="emailyn" column="emailyn"/>
         <result property="phone" column="phone"/>
         <result property="phoneyn" column="phoneyn"/>
-        <result property="mainAddress" column="main_address"/>
-        <result property="subAddress1" column="sub_address_1"/>
-        <result property="subAddress2" column="sub_address_2"/>
         <result property="type" column="type"/>
         <result property="point" column="point"/>
         <result property="role" column="role"/>
@@ -38,29 +32,29 @@
     </resultMap>
 
     <insert id="insertUser" parameterType="User" useGeneratedKeys="true" keyProperty="uid">
-        INSERT INTO user (user_id,password,user_name,email,emailyn,phone,phoneyn,main_address,sub_address_1,sub_address_2,role)
-        VALUES (#{userId},#{password},#{userName}, #{email}, #{emailyn}, #{phone}, #{phoneyn}, #{mainAddress}, #{subAddress1}, #{subAddress2},#{role});
+        INSERT INTO user (user_id,password,user_name,email,emailyn,phone,phoneyn,role)
+        VALUES (#{userId},#{password},#{userName}, #{email}, #{emailyn}, #{phone}, #{phoneyn},#{role});
     </insert>
 
     <select id="findUserByUserId" parameterType="String" resultMap="userResultMap">
-        SELECT uid, user_id, password, user_name, email, emailyn, phone, phoneyn, main_address, sub_address_1, sub_address_2, point, role, status, created_date
+        SELECT uid, user_id, password, user_name, email, emailyn, phone, phoneyn, point, role, status, created_date
         FROM user
         WHERE user_id = #{userId};
     </select>
 
     <insert id="saveSocial" parameterType="Social" useGeneratedKeys="true" keyProperty="uid">
-        INSERT INTO social (user_id,user_name,email,emailyn,phone,phoneyn,main_address,sub_address_1,sub_address_2,type,role)
-        VALUES (#{userId}, #{userName}, #{email}, #{emailyn}, #{phone}, #{phoneyn}, #{mainAddress}, #{subAddress1}, #{subAddress2},#{type},#{role});
+        INSERT INTO social (user_id,user_name,email,emailyn,phone,phoneyn,type,role)
+        VALUES (#{userId}, #{userName}, #{email}, #{emailyn}, #{phone}, #{phoneyn},#{type},#{role});
     </insert>
 
     <select id="findSocialByUserName" parameterType="String" resultMap="socialResultMap">
-        SELECT uid, user_id, user_name, email, emailyn, phone, phoneyn, main_address, sub_address_1, sub_address_2, type, point, role, status, created_date
+        SELECT uid, user_id, user_name, email, emailyn, phone, phoneyn, type, point, role, status, created_date
         FROM social
         WHERE user_name = #{userName};
     </select>
 
     <select id="findSocialByUserId" parameterType="String" resultMap="socialResultMap">
-        SELECT uid, user_id, user_name, email, emailyn, phone, phoneyn, main_address, sub_address_1, sub_address_2, type, point, role, status, created_date
+        SELECT uid, user_id, user_name, email, emailyn, phone, phoneyn, type, point, role, status, created_date
         FROM social
         WHERE user_id = #{userId};
     </select>

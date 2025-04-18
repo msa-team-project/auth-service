@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.authservice.mapper.AddressMapper">
+    <resultMap id="addressResultMap" type="Address">
+        <result property="uid" column="uid"/>
+        <result property="userUid" column="user_uid"/>
+        <result property="socialUid" column="social_uid"/>
+        <result property="mainAddress" column="main_address"/>
+        <result property="subAddress1" column="sub_address1"/>
+        <result property="subAddress2" column="sub_address2"/>
+        <result property="mainLat" column="main_lat"/>
+        <result property="mainLan" column="main_lan"/>
+        <result property="sub1Lat" column="sub1_lat"/>
+        <result property="sub1Lan" column="sub1_lan"/>
+        <result property="sub2Lat" column="sub2_lat"/>
+        <result property="sub2Lan" column="sub2_Lan"/>
+    </resultMap>
+
+
+
+</mapper>
