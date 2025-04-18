@@ -5,6 +5,7 @@ import com.example.authservice.config.security.CustomUserDetails;
 import com.example.authservice.dto.*;
 import com.example.authservice.mapper.TokenMapper;
 import com.example.authservice.mapper.UserMapper;
+import com.example.authservice.model.Address;
 import com.example.authservice.model.Social;
 import com.example.authservice.model.User;
 import com.example.authservice.type.Role;
@@ -72,6 +73,7 @@ public class UserService {
         }
 
         User result = userMapper.save(user);
+        //주소 추가
 
         if(result == null){
             return UserJoinResponseDTO.builder()
@@ -285,6 +287,32 @@ public class UserService {
         }
         return LogoutResponseDTO.builder()
                 .successed((result>0)&& removeTokenResult.isSuccessed())
+                .build();
+    }
+
+    //주소 변경 (수정 중)
+    @Transactional
+    public User updateAddress(int uid, UpdateAddressRequestDTO request) {
+        // 1) DB에서 유저 조회
+        User user = userMapper.findUserByUserUid(uid);
+        // 2) 주소 변경 (수정 중)
+//        User.builder(
+//                .address()
+//        );
+        // 3) 저장
+        User saved = userMapper.save(user);
+
+        // 4) 변경된 후 사용자 정보 반환
+        return User.builder()
+                .userId(saved.getUserId())
+                .userName(saved.getUserName())
+                .email(saved.getEmail())
+                .emailyn(saved.getEmailyn())
+                .phone(saved.getPhone())
+                .phoneyn(saved.getPhoneyn())
+                .address(saved.getAddress())
+                .point(saved.getPoint())
+                .role(saved.getRole())
                 .build();
     }
 }
