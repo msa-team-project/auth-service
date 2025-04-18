@@ -305,9 +305,9 @@ public class UserService {
         // 1) DB에서 유저 조회
         User user = userMapper.findUserByUserUid(uid);
         // 2) 주소 변경 (수정 중)
-        User.builder(
-                .address()
-        );
+//        User.builder(
+//                .address()
+//        );
         // 3) 저장
         User saved = userMapper.save(user);
 
