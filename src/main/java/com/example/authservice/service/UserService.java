@@ -189,9 +189,6 @@ public class UserService {
                     .emailyn("n")
                     .phone(oauthDTO.getMobile())
                     .phoneyn("n")
-                    .mainAddress("")
-                    .subAddress1("")
-                    .subAddress2("")
                     .type(NAVER)
                     .role(ROLE_USER)
                     .build();
@@ -203,9 +200,6 @@ public class UserService {
                     .emailyn("n")
                     .phone("")
                     .phoneyn("n")
-                    .mainAddress("")
-                    .subAddress1("")
-                    .subAddress2("")
                     .type(GOOGLE)
                     .role(ROLE_USER)
                     .build();
@@ -218,9 +212,6 @@ public class UserService {
                     .emailyn("n")
                     .phone("")
                     .phoneyn("n")
-                    .mainAddress("")
-                    .subAddress1("")
-                    .subAddress2("")
                     .type(KAKAO)
                     .role(ROLE_USER)
                     .build();
