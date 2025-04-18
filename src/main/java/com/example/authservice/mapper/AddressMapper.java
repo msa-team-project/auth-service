@@ -1,8 +1,6 @@
 package com.example.authservice.mapper;
 
 import com.example.authservice.model.Address;
-import com.example.authservice.model.Social;
-import com.example.authservice.model.User;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

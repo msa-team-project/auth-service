@@ -10,7 +10,7 @@ import lombok.Setter;
 public class Address {
     private int uid;
     private int userUid;
-    private int socialUid;
+    private Integer socialUid;
     private String mainAddress;
     private String subAddress1;
     private String subAddress2;

@@ -75,8 +75,8 @@ public class UserService {
         }
 
         User result = userMapper.save(user);
-        Address addressResult = addressMapper.save(address);
-        addressResult.setUid(result.getUid());
+        address.setUserUid(result.getUid());
+        addressMapper.insertAddress(address);
 
         if(result == null){
             return UserJoinResponseDTO.builder()
