@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 
 import static com.example.authservice.type.Role.ROLE_USER;
 import static com.example.authservice.type.Type.*;
@@ -280,12 +281,53 @@ public class UserService {
         if("naver".equals(splitArr[0]) || "kakao".equals(splitArr[0]) || "google".equals(splitArr[0])){
             Social findSocial = userMapper.findSocialByUserId(splitArr[1]);
 
-            // Address userAddress =
+            Address userAddress = addressMapper.findBySocialUid(findSocial.getUid());
+
+            return ProfileResponseDTO.builder()
+                    .uid(findSocial.getUid())
+                    .userId(findSocial.getUserId())
+                    .userName(findSocial.getUserName())
+                    .email(findSocial.getEmail())
+                    .phone(findSocial.getPhone())
+                    .type(findSocial.getType())
+                    .point(findSocial.getPoint())
+                    .role(findSocial.getRole())
+                    .createdDate(findSocial.getCreatedDate())
+                    .mainAddress(userAddress.getMainAddress())
+                    .mainLat(userAddress.getMainLat())
+                    .mainLan(userAddress.getMainLan())
+                    .subAddress1(userAddress.getSubAddress1())
+                    .sub1Lat(userAddress.getSub1Lat())
+                    .sub1Lan(userAddress.getSub1Lan())
+                    .subAddress2(userAddress.getSubAddress2())
+                    .sub2Lat(userAddress.getSub2Lat())
+                    .sub2Lan(userAddress.getSub2Lan())
+                    .build();
         }else{
+            User findUser = userMapper.findUserByUserId(splitArr[1]);
 
+            Address userAddress = addressMapper.findByUserUid(findUser.getUid());
+
+            return ProfileResponseDTO.builder()
+                    .uid(findUser.getUid())
+                    .userId(findUser.getUserId())
+                    .userName(findUser.getUserName())
+                    .email(findUser.getEmail())
+                    .phone(findUser.getPhone())
+                    .point(findUser.getPoint())
+                    .role(findUser.getRole())
+                    .createdDate(findUser.getCreatedDate())
+                    .mainAddress(userAddress.getMainAddress())
+                    .mainLat(userAddress.getMainLat())
+                    .mainLan(userAddress.getMainLan())
+                    .subAddress1(userAddress.getSubAddress1())
+                    .sub1Lat(userAddress.getSub1Lat())
+                    .sub1Lan(userAddress.getSub1Lan())
+                    .subAddress2(userAddress.getSubAddress2())
+                    .sub2Lat(userAddress.getSub2Lat())
+                    .sub2Lan(userAddress.getSub2Lan())
+                    .build();
         }
-
-        return null;
     }
 
     @Transactional

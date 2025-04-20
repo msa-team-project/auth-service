@@ -30,6 +30,13 @@
         WHERE user_uid = #{userUid}
     </select>
 
+    <select id="findBySocialUid"
+            parameterType="int"
+            resultMap="addressResultMap">
+        SELECT uid,user_uid, social_uid, main_address, sub_address1, sub_address2, main_lat, main_lan, sub1_lat, sub1_lan, sub2_lat, sub2_lan
+        FROM user_address
+        WHERE social_uid = #{socialUid}
+    </select>
 
     <update id="updateAddress" parameterType="com.example.authservice.model.Address">
         UPDATE user_address

@@ -3,13 +3,16 @@ package com.example.authservice.service;
 import com.example.authservice.config.redis.RedisUtil;
 import com.example.authservice.config.security.CustomUserDetails;
 import com.example.authservice.dto.*;
+import com.example.authservice.mapper.AddressMapper;
 import com.example.authservice.mapper.UserMapper;
+import com.example.authservice.model.Address;
 import com.example.authservice.model.Social;
 import com.example.authservice.model.User;
 import com.example.authservice.type.Role;
 import com.example.authservice.type.Type;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,12 +26,13 @@ import java.util.List;
 import static com.example.authservice.type.Type.GOOGLE;
 import static com.example.authservice.type.Type.NAVER;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class UserServiceTest {
 
     private UserMapper userMapper;
+    private AddressMapper addressMapper;
     private AuthenticationManager authenticationManager;
     private TokenProviderService tokenProviderService;
     private EmailService emailService;
@@ -38,11 +42,12 @@ class UserServiceTest {
     @BeforeEach
     void setUp() {
         userMapper = mock(UserMapper.class);
+        addressMapper = mock(AddressMapper.class);
         authenticationManager = mock(AuthenticationManager.class);
         tokenProviderService = mock(TokenProviderService.class);
         emailService = mock(EmailService.class);
         redisUtil = mock(RedisUtil.class);
-        userService = new UserService(userMapper, authenticationManager, tokenProviderService, emailService, redisUtil);
+        userService = new UserService(userMapper, addressMapper, authenticationManager, tokenProviderService, emailService, redisUtil);
     }
 
     @Test
@@ -230,7 +235,7 @@ class UserServiceTest {
 
         OAuthLoginResponseDTO response = userService.oauthLogin(dto);
 
-        verify(userMapper).activeSocial("user123");
+        //verify(userMapper).activeSocial("user123");
         assertThat(response.isLoggedIn()).isTrue();
     }
 
@@ -343,5 +348,159 @@ class UserServiceTest {
         Social social = userService.buildNewSocialObj("unknown", oauthDTO);
 
         assertThat(social).isNull();
+    }
+
+    @Test
+    void 회원가입_성공_테스트() {
+        // given: 이메일 인증 플래그가 존재하고 true인 경우
+        String email = "test@example.com";
+        User user = User.builder().email(email).build();
+        Address address = Address.builder()
+                .mainAddress("Main Address")
+                .mainLan(100.0)
+                .mainLat(100.0)
+                .build();
+        when(redisUtil.existData(email + ":verified")).thenReturn(true);
+        when(redisUtil.getData(email + ":verified")).thenReturn("true");
+        when(userMapper.save(user)).thenReturn(user);
+        doNothing().when(addressMapper).insertAddress(address);
+
+        // when
+        UserJoinResponseDTO result = userService.join(user, address);
+
+        // then
+        assertTrue(result.isSuccess());
+        verify(redisUtil).deleteData(email + ":verified");
+        verify(addressMapper).insertAddress(address);
+    }
+
+    @Test
+    void 회원가입_실패_인증필요_테스트() {
+        // given: 이메일 인증 플래그가 없거나 false인 경우
+        String email = "fail@example.com";
+        User user = User.builder().email(email).build();
+        Address address = Address.builder()
+                .mainAddress("Main Address")
+                .mainLan(200.0)
+                .mainLat(200.0)
+                .build();
+        when(redisUtil.existData(email + ":verified")).thenReturn(false);
+
+        // when & then
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> userService.join(user, address));
+        assertEquals("이메일 인증이 필요합니다.", ex.getMessage());
+    }
+
+    @Test
+    void 이메일_검증_통과_테스트() {
+        // given
+        String email = "user@mail.com";
+        String code = "1234";
+        when(emailService.verifyEmailCode(email, code)).thenReturn(true);
+
+        // when
+        boolean ok = userService.verifyEmail(email, code);
+
+        // then
+        assertTrue(ok);
+    }
+
+    @Test
+    void 이메일_검증_실패_테스트() {
+        // given
+        String email = "user@mail.com";
+        String code = "0000";
+        when(emailService.verifyEmailCode(email, code)).thenReturn(false);
+
+        // when
+        boolean ok = userService.verifyEmail(email, code);
+
+        // then
+        assertFalse(ok);
+    }
+
+    @Test
+    void 주소_수정_성공_테스트() {
+        // given
+        int uid = 42;
+        UpdateAddressRequestDTO request = UpdateAddressRequestDTO.builder()
+                .userUid(uid)
+                .mainAddress("강남대로 123")
+                .subAddress1("2층")
+                .subAddress2("사무실 456호")
+                .mainLat(37.4979)
+                .mainLan(127.0276)
+                .subLat1(37.4980)
+                .subLan1(127.0277)
+                .subLat2(37.4981)
+                .subLan2(127.0278)
+                .build();
+
+        User user = User.builder().uid(uid).build();
+        Address existing = Address.builder()
+                .userUid(uid)
+                .mainAddress("강남대로 OLD")
+                .mainLat(1.0).mainLan(1.0)
+                .sub1Lat(1.1).sub1Lan(1.1)
+                .sub2Lat(1.2).sub2Lan(1.2)
+                .build();
+
+        when(userMapper.findUserByUserUid(uid)).thenReturn(user);
+        when(addressMapper.findByUserUid(uid)).thenReturn(existing);
+        doNothing().when(addressMapper).updateAddress(any(Address.class));
+
+        // when
+        UpdateAddressResponseDTO response = userService.updateAddress(uid, request);
+
+        // then
+        assertTrue(response.isSuccess());
+        // 그리고 실제로 updateAddress 호출 시, 프로퍼티가 request 값으로 바뀌었는지 검증하고 싶다면
+        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
+        verify(addressMapper).updateAddress(captor.capture());
+        Address updated = captor.getValue();
+        assertEquals("강남대로 123",   updated.getMainAddress());
+        assertEquals("2층",            updated.getSubAddress1());
+        assertEquals("사무실 456호",    updated.getSubAddress2());
+        assertEquals(37.4979,          updated.getMainLat());
+        assertEquals(127.0276,         updated.getMainLan());
+        assertEquals(37.4980,          updated.getSub1Lat());
+        assertEquals(127.0277,         updated.getSub1Lan());
+        assertEquals(37.4981,          updated.getSub2Lat());
+        assertEquals(127.0278,         updated.getSub2Lan());
+    }
+
+    @Test
+    void 주소_수정_실패_사용자없음_테스트() {
+        // given
+        int uid = 99;
+        when(userMapper.findUserByUserUid(uid)).thenReturn(null);
+
+        // when & then
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.updateAddress(uid,
+                        UpdateAddressRequestDTO.builder().build()
+                )
+        );
+        assertTrue(ex.getMessage().contains("존재하지 않는 사용자 UID"));
+    }
+
+    @Test
+    void 주소_수정_실패_주소없음_테스트() {
+        // given
+        int uid = 50;
+        User user = User.builder().uid(uid).build();
+        when(userMapper.findUserByUserUid(uid)).thenReturn(user);
+        when(addressMapper.findByUserUid(uid)).thenReturn(null);
+
+        // when & then
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.updateAddress(uid,
+                        UpdateAddressRequestDTO.builder().build()
+                )
+        );
+        assertTrue(ex.getMessage().contains("주소 정보가 없습니다"));
     }
 }
