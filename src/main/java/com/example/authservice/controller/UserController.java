@@ -49,6 +49,13 @@ public class UserController {
         return userService.getUserProfile(token);
     }
 
+    @PutMapping("/profile")
+    public boolean updateUserProfile(HttpServletRequest request, @RequestBody UpdateProfileRequestDTO updateProfileRequestDTO){
+        String token = request.getHeader("Authorization").substring(7);
+        log.info("user update profile :: {}", token);
+        return userService.updateUserProfile(token, updateProfileRequestDTO);
+    }
+
     @PostMapping("/logout")
     public LogoutResponseDTO logout(HttpServletRequest request){
         String token = request.getHeader("Authorization").substring(7);
