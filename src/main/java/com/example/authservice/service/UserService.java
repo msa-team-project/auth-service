@@ -70,22 +70,24 @@ public class UserService {
             throw new RuntimeException("이메일 인증이 필요합니다.");
         }
 
+        // 1) save 후 null 체크를 최우선으로
         User result = userMapper.save(user);
-        address.setUserUid(result.getUid());
-        addressMapper.insertAddress(address);
-
-        if(result == null){
+        if (result == null) {
+            // save 가 실패했다면 NPE 대신 곧바로 실패 DTO 리턴
             return UserJoinResponseDTO.builder()
                     .isSuccess(false)
                     .build();
-        }else{
-            // 가입 성공 후 인증 플래그 제거
-            redisUtil.deleteData(email + ":verified");
-
-            return UserJoinResponseDTO.builder()
-                    .isSuccess(true)
-                    .build();
         }
+
+        // 2) result 가 null 이 아니면 정상적으로 address 처리
+        address.setUserUid(result.getUid());
+        addressMapper.insertAddress(address);
+
+        // 3) 인증 플래그 제거 및 성공 DTO 반환
+        redisUtil.deleteData(email + ":verified");
+        return UserJoinResponseDTO.builder()
+                .isSuccess(true)
+                .build();
     }
 
     //이메일 인증 코드 검증 로직

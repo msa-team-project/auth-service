@@ -22,7 +22,7 @@ public class EmailController {
     private final UserService userService;
 
     // 이메일로 인증 코드 받기
-    @GetMapping("/{email}/authcode")
+    @GetMapping("/{email:.+}/authcode")
     public ResponseEntity<String> sendEmailPath(@PathVariable String email) throws MessagingException, IOException {
         emailService.sendEmail(email);
         log.info("Requested email: " + email);
@@ -30,7 +30,7 @@ public class EmailController {
     }
 
     // 인증 코드를 입력한 후 난수 생성
-    @PostMapping("/{email}/authcode")
+    @PostMapping("/{email:.+}/authcode")
     public ResponseEntity<String> sendEmailAndCode(@PathVariable String email, @RequestBody EmailRequestDTO emailRequestDTO) throws NoSuchAlgorithmException {
         if (emailService.verifyEmailCode(email, emailRequestDTO.getCode())) {
             return ResponseEntity.ok(emailService.makeMemberId(email));
