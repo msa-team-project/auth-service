@@ -4,15 +4,11 @@ import com.example.authservice.config.redis.RedisUtil;
 import com.example.authservice.config.security.CustomUserDetails;
 import com.example.authservice.dto.*;
 import com.example.authservice.mapper.AddressMapper;
-import com.example.authservice.mapper.TokenMapper;
 import com.example.authservice.mapper.UserMapper;
 import com.example.authservice.model.Address;
 import com.example.authservice.model.Social;
 import com.example.authservice.model.User;
-import com.example.authservice.type.Role;
-import com.example.authservice.type.Type;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -21,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 
 import static com.example.authservice.type.Role.ROLE_USER;
 import static com.example.authservice.type.Type.*;
@@ -159,7 +154,9 @@ public class UserService {
             System.out.println("find type is :: " + findSocial.getType().name());
             System.out.println("tokens type is :: " + tokens[0]);
             if(findSocial.getType().name().toLowerCase().equals(tokens[0])){
-
+                if(findSocial.getStatus().equals("deleted")){
+                    userMapper.activeSocial(findSocial.getUserId());
+                }
                 // redis에 저장
                 tokenProviderService.saveTokensToRedis(findSocial.getType().name()+":"+oauthDTO.getId(), oauthDTO.getAccessToken(), oauthDTO.getRefreshToken());
 
@@ -304,7 +301,7 @@ public class UserService {
                     .sub2Lan(userAddress.getSub2Lan())
                     .build();
         }else{
-            User findUser = userMapper.findUserByUserId(splitArr[1]);
+            User findUser = tokenProviderService.getTokenDetails(token);
 
             Address userAddress = addressMapper.findByUserUid(findUser.getUid());
 
@@ -382,5 +379,35 @@ public class UserService {
         return UpdateAddressResponseDTO.builder()
                 .isSuccess(true)
                 .build();
+    }
+
+    public boolean updateUserProfile(String token, UpdateProfileRequestDTO updateProfileRequestDTO) {
+        String[] splitArr = token.split(":");
+
+        if("naver".equals(splitArr[0]) || "kakao".equals(splitArr[0]) || "google".equals(splitArr[0])){
+            Social findSocial = userMapper.findSocialByUserId(splitArr[1]);
+
+            boolean socialResult = userMapper.updateSocial(
+                    Social.builder()
+                            .userId(splitArr[1])
+                            .userName(updateProfileRequestDTO.getUserName())
+                            .email(updateProfileRequestDTO.getEmail())
+                            .emailyn(updateProfileRequestDTO.getEmailyn())
+                            .phone(updateProfileRequestDTO.getPhone())
+                            .phoneyn(updateProfileRequestDTO.getPhoneyn())
+                            .build()) > 0 ;
+            return socialResult;
+        }else{
+            User findUser = tokenProviderService.getTokenDetails(token);
+            return userMapper.updateUser(
+                    User.builder()
+                            .userId(splitArr[1])
+                            .userName(updateProfileRequestDTO.getUserName())
+                            .email(updateProfileRequestDTO.getEmail())
+                            .emailyn(updateProfileRequestDTO.getEmailyn())
+                            .phone(updateProfileRequestDTO.getPhone())
+                            .phoneyn(updateProfileRequestDTO.getPhoneyn())
+                            .build()) > 0 ;
+        }
     }
 }

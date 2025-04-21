@@ -24,6 +24,8 @@ public class TokenService {
         int result = tokenProviderService.validToken("refreshToken", refreshToken);
         // oauth와 자체가입자의 로직 구분해야함
         // oauth 토큰 재발행을 프론트에서 해야함
+        System.out.println("result : " + result);
+        System.out.println("refreshToken is :: " + refreshToken);
 
         String[] splitTokens = refreshToken.split(":");
 
@@ -39,6 +41,8 @@ public class TokenService {
 
                 newAccessToken = tokenProviderService.generateToken(user, Duration.ofHours(2));
                 newRefreshToken = tokenProviderService.generateToken(user, Duration.ofDays(2));
+
+                tokenProviderService.saveTokensToRedis("USER:"+user.getUserId(), newAccessToken, newRefreshToken);
             }
         }
 
@@ -64,7 +68,7 @@ public class TokenService {
     public RefreshTokenResponseDTO updateTokens(String accessToken, String refreshToken) {
         String[] splitTokens = accessToken.split(":");
 
-        tokenProviderService.saveTokensToRedis(splitTokens[1], accessToken, refreshToken);
+        tokenProviderService.saveTokensToRedis(splitTokens[0].toUpperCase() + ":" + splitTokens[1], accessToken, refreshToken);
 
         Social findSocial = userMapper.findSocialByUserName(splitTokens[1]);
 

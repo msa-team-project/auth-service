@@ -92,4 +92,22 @@
             user_id = #{userId};
     </update>
 
+    <update id="updateUser" parameterType="User" useGeneratedKeys="true" keyProperty="uid">
+        UPDATE
+            user
+        SET
+            user_name = #{userName}, email = #{email}, emailyn = #{emailyn}, phone = #{phone}, phoneyn = #{phoneyn}
+        WHERE
+            user_id = #{userId};
+    </update>
+
+    <update id="updateSocial" parameterType="Social" useGeneratedKeys="true" keyProperty="uid">
+        UPDATE
+            social
+        SET
+            user_name = #{userName}, email = #{email}, emailyn = #{emailyn}, phone = #{phone}, phoneyn = #{phoneyn}
+        WHERE
+            user_id = #{userId};
+    </update>
+
 </mapper>

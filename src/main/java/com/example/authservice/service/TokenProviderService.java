@@ -147,6 +147,7 @@ public class TokenProviderService {
             Token findToken = tokenMapper.findTokenBySocialUid(uid);
 
             if (findToken != null) {
+                System.out.println("update token DB");
                 return tokenMapper.updateSocialToken(
                         Token.builder()
                                 .socialUid(uid)
@@ -155,6 +156,7 @@ public class TokenProviderService {
                                 .build()
                 );
             }else{
+                System.out.println("save token DB");
                 return tokenMapper.saveSocialToken(
                         Token.builder()
                                 .socialUid(uid)
