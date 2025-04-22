@@ -66,6 +66,7 @@ public class UserService {
     public UserJoinResponseDTO join(User user, Address address) {
 
         String email = user.getEmail();
+
         if (!redisUtil.existData(email + ":verified") || !"true".equals(redisUtil.getData(email + ":verified"))) {
             throw new RuntimeException("이메일 인증이 필요합니다.");
         }

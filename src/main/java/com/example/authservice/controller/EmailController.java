@@ -1,6 +1,7 @@
 package com.example.authservice.controller;
 
 import com.example.authservice.dto.EmailRequestDTO;
+import com.example.authservice.mapper.UserMapper;
 import com.example.authservice.service.EmailService;
 import com.example.authservice.service.UserService;
 import jakarta.mail.MessagingException;
@@ -19,10 +20,15 @@ import java.security.NoSuchAlgorithmException;
 public class EmailController {
 
     private final EmailService emailService;
+    private final UserMapper userMapper;
 
     // 이메일로 인증 코드 받기
     @GetMapping("/{email:.+}/authcode")
     public ResponseEntity<String> sendEmailPath(@PathVariable String email) throws MessagingException, IOException {
+        if (userMapper.countByEmail(email) > 0) {
+            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+        }
+
         emailService.sendEmail(email);
         log.info("Requested email: " + email);
         return ResponseEntity.ok("이메일을 확인하세요");
