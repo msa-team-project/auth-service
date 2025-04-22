@@ -19,7 +19,6 @@ import java.security.NoSuchAlgorithmException;
 public class EmailController {
 
     private final EmailService emailService;
-    private final UserService userService;
 
     // 이메일로 인증 코드 받기
     @GetMapping("/{email:.+}/authcode")
