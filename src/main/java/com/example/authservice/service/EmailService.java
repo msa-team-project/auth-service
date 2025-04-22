@@ -90,7 +90,14 @@ public class EmailService {
         if (codeFoundByEmail == null) {
             return false;
         }
+        if (!codeFoundByEmail.equals(code)) {
+            return false;
+        }
+
         redisUtil.setDataExpire(email + ":verified", "true", 600L); // 10분간 유효
+
+        redisUtil.deleteData(email);
+
         return true;
     }
 

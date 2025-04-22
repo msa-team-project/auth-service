@@ -2,6 +2,7 @@ package com.example.authservice.mapper;
 
 import com.example.authservice.model.Social;
 import com.example.authservice.model.User;
+import feign.Param;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
@@ -16,6 +17,7 @@ public interface UserMapper {
         return user;
     }
 
+    int countByEmail(@Param("email") String email);
     User findUserByUserId(String userId);
     User findUserByUserUid(int uid);
     Social findSocialByUserName(String userName);

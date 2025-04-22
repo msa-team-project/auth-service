@@ -1,11 +1,15 @@
 package com.example.authservice.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.Collections;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -21,6 +25,14 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String handleAll(Exception ex) {
         return "에러 발생" + ex.getMessage();
+    }
+
+    //이메일 중복 및 미인증 시 400처리
+    @ExceptionHandler({ IllegalArgumentException.class, IllegalStateException.class })
+    public ResponseEntity<Map<String,String>> handleBadRequest(RuntimeException ex) {
+        return ResponseEntity
+                .badRequest()
+                .body(Collections.singletonMap("message", ex.getMessage()));
     }
 }
 

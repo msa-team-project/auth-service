@@ -36,6 +36,10 @@
         VALUES (#{userId},#{password},#{userName}, #{email}, #{emailyn}, #{phone}, #{phoneyn},#{role});
     </insert>
 
+    <select id="countByEmail" parameterType="String" resultType="int">
+        SELECT COUNT(*) FROM user WHERE email = #{email}
+    </select>
+
     <select id="findUserByUserId" parameterType="String" resultMap="userResultMap">
         SELECT uid, user_id, password, user_name, email, emailyn, phone, phoneyn, point, role, status, created_date
         FROM user

@@ -4,15 +4,11 @@ import com.example.authservice.config.redis.RedisUtil;
 import com.example.authservice.config.security.CustomUserDetails;
 import com.example.authservice.dto.*;
 import com.example.authservice.mapper.AddressMapper;
-import com.example.authservice.mapper.TokenMapper;
 import com.example.authservice.mapper.UserMapper;
 import com.example.authservice.model.Address;
 import com.example.authservice.model.Social;
 import com.example.authservice.model.User;
-import com.example.authservice.type.Role;
-import com.example.authservice.type.Type;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -70,6 +66,7 @@ public class UserService {
     public UserJoinResponseDTO join(User user, Address address) {
 
         String email = user.getEmail();
+
         if (!redisUtil.existData(email + ":verified") || !"true".equals(redisUtil.getData(email + ":verified"))) {
             throw new RuntimeException("이메일 인증이 필요합니다.");
         }
