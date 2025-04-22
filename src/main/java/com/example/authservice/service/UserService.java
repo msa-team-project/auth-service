@@ -264,7 +264,8 @@ public class UserService {
                     .role(findSocial.getRole())
                     .build();
         }else{
-            User findUser = tokenProviderService.getTokenDetails(token);
+            User tokenUserInfo = tokenProviderService.getTokenDetails(token);
+            User findUser = userMapper.findUserByUserId(tokenUserInfo.getUserId());
 
             return UserInfoResponseDTO.builder()
                     .id(Long.valueOf(findUser.getUid()))
@@ -304,7 +305,8 @@ public class UserService {
                     .sub2Lan(userAddress.getSub2Lan())
                     .build();
         }else{
-            User findUser = tokenProviderService.getTokenDetails(token);
+            User tokenUserInfo = tokenProviderService.getTokenDetails(token);
+            User findUser = userMapper.findUserByUserId(tokenUserInfo.getUserId());
 
             Address userAddress = addressMapper.findByUserUid(findUser.getUid());
 
@@ -384,6 +386,7 @@ public class UserService {
                 .build();
     }
 
+    @Transactional
     public boolean updateUserProfile(String token, UpdateProfileRequestDTO updateProfileRequestDTO) {
         String[] splitArr = token.split(":");
 
@@ -399,18 +402,36 @@ public class UserService {
                             .phone(updateProfileRequestDTO.getPhone())
                             .phoneyn(updateProfileRequestDTO.getPhoneyn())
                             .build()) > 0 ;
+            // social address 수정하는 코드 들어갈 예정
             return socialResult;
         }else{
             User findUser = tokenProviderService.getTokenDetails(token);
-            return userMapper.updateUser(
+
+            System.out.println("user name " + findUser.getUserName());
+            boolean userResult =  userMapper.updateUser(
                     User.builder()
-                            .userId(splitArr[1])
+                            .userId(findUser.getUserId())
                             .userName(updateProfileRequestDTO.getUserName())
                             .email(updateProfileRequestDTO.getEmail())
                             .emailyn(updateProfileRequestDTO.getEmailyn())
                             .phone(updateProfileRequestDTO.getPhone())
                             .phoneyn(updateProfileRequestDTO.getPhoneyn())
                             .build()) > 0 ;
+            addressMapper.updateAddress(
+                    Address.builder()
+                            .userUid(findUser.getUid())
+                            .mainAddress(updateProfileRequestDTO.getMainAddress())
+                            .mainLat(updateProfileRequestDTO.getMainLat())
+                            .mainLan(updateProfileRequestDTO.getMainLan())
+                            .subAddress1(updateProfileRequestDTO.getSubAddress1())
+                            .sub1Lat(updateProfileRequestDTO.getSubLat1())
+                            .sub1Lan(updateProfileRequestDTO.getSubLan1())
+                            .subAddress2(updateProfileRequestDTO.getSubAddress2())
+                            .sub2Lat(updateProfileRequestDTO.getSubLat2())
+                            .sub2Lan(updateProfileRequestDTO.getSubLan2())
+                            .build()
+            );
+            return userResult;
         }
     }
 }
