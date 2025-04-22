@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
         return "에러 발생" + ex.getMessage();
     }
 
-    //이메일 중복 및 미인증 시 400처리
+    //이메일 중복시 400처리
     @ExceptionHandler({ IllegalArgumentException.class, IllegalStateException.class })
     public ResponseEntity<Map<String,String>> handleBadRequest(RuntimeException ex) {
         return ResponseEntity
