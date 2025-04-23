@@ -38,7 +38,7 @@
         WHERE social_uid = #{socialUid}
     </select>
 
-    <update id="updateAddress" parameterType="Address">
+    <update id="updateAddressByUserUId" parameterType="Address" useGeneratedKeys="true" keyProperty="uid">
         UPDATE user_address
         <set>
             main_address  = #{mainAddress},
@@ -52,6 +52,22 @@
             sub2_lan      = #{sub2Lan}
         </set>
         WHERE user_uid = #{userUid}
+    </update>
+
+    <update id="updateAddressBySocialUid" parameterType="Address" useGeneratedKeys="true" keyProperty="uid">
+        UPDATE user_address
+        <set>
+            main_address  = #{mainAddress},
+            sub_address1  = #{subAddress1},
+            sub_address2  = #{subAddress2},
+            main_lat      = #{mainLat},
+            main_lan      = #{mainLan},
+            sub1_lat      = #{sub1Lat},
+            sub1_lan      = #{sub1Lan},
+            sub2_lat      = #{sub2Lat},
+            sub2_lan      = #{sub2Lan}
+        </set>
+        WHERE social_uid = #{socialUid}
     </update>
 
 </mapper>
