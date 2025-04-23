@@ -353,20 +353,18 @@ public class UserService {
 
     //주소 변경
     @Transactional
-    public UpdateAddressResponseDTO updateAddress(int uid, UpdateAddressRequestDTO request) {
-        // 1) 유저 존재 확인 (선택)
-        User user = userMapper.findUserByUserUid(uid);
-        if (user == null) {
-            throw new IllegalArgumentException("존재하지 않는 사용자 UID: " + uid);
-        }
+    public UpdateAddressResponseDTO updateAddress(String token, UpdateAddressRequestDTO request) {
+        String[] parts = token.split(":");
+        boolean isSocial = parts[0].equalsIgnoreCase("kakao")
+                || parts[0].equalsIgnoreCase("naver")
+                || parts[0].equalsIgnoreCase("google");
 
-        // 2) 기존 Address 조회
-        Address address = addressMapper.findByUserUid(user.getUid());
-        if (address == null) {
-            throw new IllegalArgumentException("주소 정보가 없습니다. userUid=" + uid);
-        }
+        // DB에서 기존 주소 불러오기
+        Address address = isSocial
+                ? addressMapper.findBySocialUid( userMapper.findSocialByUserId(parts[1]).getUid() )
+                : addressMapper.findByUserUid( tokenProviderService.getTokenDetails(token).getUid() );
 
-        // 3) Address 엔티티에 변경 사항 반영
+        // Address 엔티티에 변경 사항 반영
         address.setMainAddress(request.getMainAddress());
         address.setSubAddress1(request.getSubAddress1());
         address.setSubAddress2(request.getSubAddress2());
@@ -377,12 +375,13 @@ public class UserService {
         address.setSub2Lat(request.getSubLat2());
         address.setSub2Lan(request.getSubLan2());
 
-        // 4) DB 업데이트
-        addressMapper.updateAddress(address);
+        // DB 업데이트
+        int updatedRows = addressMapper.updateAddress(address);
+        boolean success = (updatedRows == 1);
 
-        // 5) 결과 DTO 리턴
+        // 결과 DTO 리턴
         return UpdateAddressResponseDTO.builder()
-                .isSuccess(true)
+                .isSuccess(success)
                 .build();
     }
 

@@ -71,9 +71,10 @@ public class UserController {
     }
 
     //주소 수정
-    @PutMapping("/{uid}/address")
-    public UpdateAddressResponseDTO updateUserAddress(@PathVariable int uid, @RequestBody UpdateAddressRequestDTO request) {
+    @PutMapping("/address")
+    public UpdateAddressResponseDTO updateUserAddress(@RequestHeader("Authorization") String bearerToken, @RequestBody UpdateAddressRequestDTO request) {
+        String token = bearerToken.substring(7);
         log.info("update user address :: {}", request);
-        return userService.updateAddress(uid,request);
+        return userService.updateAddress(token,request);
     }
 }

@@ -38,7 +38,7 @@
         WHERE social_uid = #{socialUid}
     </select>
 
-    <update id="updateAddress" parameterType="com.example.authservice.model.Address">
+    <update id="updateAddress" parameterType="Address">
         UPDATE user_address
         <set>
             main_address  = #{mainAddress},
