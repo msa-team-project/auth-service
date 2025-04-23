@@ -96,6 +96,7 @@ public class UserService {
         return emailService.verifyEmailCode(email, code);
     }
 
+    @Transactional
     public OAuthLoginResponseDTO oauthLogin(OAuthLoginRequestDTO oauthDTO){
         
         String[] tokens = oauthDTO.getAccessToken().split(":");
@@ -228,10 +229,15 @@ public class UserService {
 
     public LogoutResponseDTO logout(String token) {
         String[] splitArr = token.split(":");
+
+        boolean isSocial = splitArr[0].equals("kakao")
+                || splitArr[0].equals("naver")
+                || splitArr[0].equals("google");
+
         boolean redisResult;
         boolean dbResult;
 
-        if("naver".equals(splitArr[0]) || "kakao".equals(splitArr[0]) || "google".equals(splitArr[0])){
+        if(isSocial){
             redisResult = tokenProviderService.deleteTokenToRedis(splitArr[0].toUpperCase(),splitArr[1]);
             System.out.println("userId is :: " + splitArr[1]);
             Social findSocial = userMapper.findSocialByUserId(splitArr[1]);
@@ -254,7 +260,11 @@ public class UserService {
     public UserInfoResponseDTO getUserInfo(String token) {
         String[] splitArr = token.split(":");
 
-        if("naver".equals(splitArr[0]) || "kakao".equals(splitArr[0]) || "google".equals(splitArr[0])){
+        boolean isSocial = splitArr[0].equals("kakao")
+                || splitArr[0].equals("naver")
+                || splitArr[0].equals("google");
+
+        if(isSocial){
             Social findSocial = userMapper.findSocialByUserId(splitArr[1]);
 
             return UserInfoResponseDTO.builder()
@@ -279,7 +289,11 @@ public class UserService {
     public ProfileResponseDTO getUserProfile(String token) {
         String[] splitArr = token.split(":");
 
-        if("naver".equals(splitArr[0]) || "kakao".equals(splitArr[0]) || "google".equals(splitArr[0])){
+        boolean isSocial = splitArr[0].equals("kakao")
+                || splitArr[0].equals("naver")
+                || splitArr[0].equals("google");
+
+        if(isSocial){
             Social findSocial = userMapper.findSocialByUserId(splitArr[1]);
 
             Address userAddress = addressMapper.findBySocialUid(findSocial.getUid());
@@ -294,15 +308,15 @@ public class UserService {
                     .point(findSocial.getPoint())
                     .role(findSocial.getRole())
                     .createdDate(findSocial.getCreatedDate())
-                    .mainAddress(userAddress.getMainAddress())
-                    .mainLat(userAddress.getMainLat())
-                    .mainLan(userAddress.getMainLan())
-                    .subAddress1(userAddress.getSubAddress1())
-                    .sub1Lat(userAddress.getSub1Lat())
-                    .sub1Lan(userAddress.getSub1Lan())
-                    .subAddress2(userAddress.getSubAddress2())
-                    .sub2Lat(userAddress.getSub2Lat())
-                    .sub2Lan(userAddress.getSub2Lan())
+                    .mainAddress(userAddress!=null? userAddress.getMainAddress() : null)
+                    .mainLat(userAddress!=null? userAddress.getMainLat() : 0)
+                    .mainLan(userAddress!=null? userAddress.getMainLan() : 0)
+                    .subAddress1(userAddress!=null? userAddress.getSubAddress1() : null)
+                    .sub1Lat(userAddress!=null? userAddress.getSub1Lat() : 0)
+                    .sub1Lan(userAddress!=null? userAddress.getSub1Lan() : 0)
+                    .subAddress2(userAddress!=null? userAddress.getSubAddress2() : null)
+                    .sub2Lat(userAddress!=null? userAddress.getSub2Lat() : 0)
+                    .sub2Lan(userAddress!=null? userAddress.getSub2Lan() : 0)
                     .build();
         }else{
             User tokenUserInfo = tokenProviderService.getTokenDetails(token);
@@ -338,14 +352,14 @@ public class UserService {
 
         String[] splitArr = token.split(":");
 
-        int result;
+        boolean isSocial = splitArr[0].equals("kakao")
+                || splitArr[0].equals("naver")
+                || splitArr[0].equals("google");
 
-        if("naver".equals(splitArr[0]) || "kakao".equals(splitArr[0]) || "google".equals(splitArr[0])){
-            result = userMapper.deleteSocial(splitArr[1]);
-        }else{
-            User findUser = tokenProviderService.getTokenDetails(token);
-            result = userMapper.deleteUser(findUser.getUserId());
-        }
+        int result = isSocial
+                ? userMapper.deleteSocial(splitArr[1])
+                : userMapper.deleteUser(tokenProviderService.getTokenDetails(token).getUserId());
+
         return LogoutResponseDTO.builder()
                 .successed((result>0)&& removeTokenResult.isSuccessed())
                 .build();
@@ -355,9 +369,9 @@ public class UserService {
     @Transactional
     public UpdateAddressResponseDTO updateAddress(String token, UpdateAddressRequestDTO request) {
         String[] parts = token.split(":");
-        boolean isSocial = parts[0].equalsIgnoreCase("kakao")
-                || parts[0].equalsIgnoreCase("naver")
-                || parts[0].equalsIgnoreCase("google");
+        boolean isSocial = parts[0].equals("kakao")
+                || parts[0].equals("naver")
+                || parts[0].equals("google");
 
         // DB에서 기존 주소 불러오기
         Address address = isSocial
@@ -376,8 +390,11 @@ public class UserService {
         address.setSub2Lan(request.getSubLan2());
 
         // DB 업데이트
-        int updatedRows = addressMapper.updateAddress(address);
-        boolean success = (updatedRows == 1);
+        int updatedRows = isSocial
+                ? addressMapper.updateAddressByUserUId(address)
+                : addressMapper.updateAddressBySocialUid(address);
+
+        boolean success = (updatedRows > 0);
 
         // 결과 DTO 리턴
         return UpdateAddressResponseDTO.builder()
@@ -389,7 +406,11 @@ public class UserService {
     public boolean updateUserProfile(String token, UpdateProfileRequestDTO updateProfileRequestDTO) {
         String[] splitArr = token.split(":");
 
-        if("naver".equals(splitArr[0]) || "kakao".equals(splitArr[0]) || "google".equals(splitArr[0])){
+        boolean isSocial = "naver".equals(splitArr[0]) ||
+                "kakao".equals(splitArr[0]) ||
+                "google".equals(splitArr[0]);
+
+        if(isSocial){
             Social findSocial = userMapper.findSocialByUserId(splitArr[1]);
 
             boolean socialResult = userMapper.updateSocial(
@@ -401,8 +422,38 @@ public class UserService {
                             .phone(updateProfileRequestDTO.getPhone())
                             .phoneyn(updateProfileRequestDTO.getPhoneyn())
                             .build()) > 0 ;
-            // social address 수정하는 코드 들어갈 예정
-            return socialResult;
+            Address findAddress = addressMapper.findBySocialUid(findSocial.getUid());
+            boolean addressResult;
+            if(findAddress == null){
+                addressResult = addressMapper.insertAddress(
+                        Address.builder()
+                                .socialUid(findSocial.getUid())
+                                .mainAddress(updateProfileRequestDTO.getMainAddress())
+                                .mainLat(updateProfileRequestDTO.getMainLat())
+                                .mainLan(updateProfileRequestDTO.getMainLan())
+                                .subAddress1(updateProfileRequestDTO.getSubAddress1())
+                                .sub1Lat(updateProfileRequestDTO.getSubLat1())
+                                .sub1Lan(updateProfileRequestDTO.getSubLan1())
+                                .subAddress2(updateProfileRequestDTO.getSubAddress2())
+                                .sub2Lat(updateProfileRequestDTO.getSubLat2())
+                                .sub2Lan(updateProfileRequestDTO.getSubLan2())
+                                .build()) == 1;
+            }else{
+                addressResult = addressMapper.updateAddressBySocialUid(
+                        Address.builder()
+                                .socialUid(findSocial.getUid())
+                                .mainAddress(updateProfileRequestDTO.getMainAddress())
+                                .mainLat(updateProfileRequestDTO.getMainLat())
+                                .mainLan(updateProfileRequestDTO.getMainLan())
+                                .subAddress1(updateProfileRequestDTO.getSubAddress1())
+                                .sub1Lat(updateProfileRequestDTO.getSubLat1())
+                                .sub1Lan(updateProfileRequestDTO.getSubLan1())
+                                .subAddress2(updateProfileRequestDTO.getSubAddress2())
+                                .sub2Lat(updateProfileRequestDTO.getSubLat2())
+                                .sub2Lan(updateProfileRequestDTO.getSubLan2())
+                                .build()) > 0 ;
+            }
+            return socialResult && addressResult;
         }else{
             User findUser = tokenProviderService.getTokenDetails(token);
 
@@ -416,7 +467,7 @@ public class UserService {
                             .phone(updateProfileRequestDTO.getPhone())
                             .phoneyn(updateProfileRequestDTO.getPhoneyn())
                             .build()) > 0 ;
-            addressMapper.updateAddress(
+            boolean addressResult = addressMapper.updateAddressByUserUId(
                     Address.builder()
                             .userUid(findUser.getUid())
                             .mainAddress(updateProfileRequestDTO.getMainAddress())
@@ -428,9 +479,8 @@ public class UserService {
                             .subAddress2(updateProfileRequestDTO.getSubAddress2())
                             .sub2Lat(updateProfileRequestDTO.getSubLat2())
                             .sub2Lan(updateProfileRequestDTO.getSubLan2())
-                            .build()
-            );
-            return userResult;
+                            .build()) > 0;
+            return userResult && addressResult;
         }
     }
 }
