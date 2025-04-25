@@ -5,8 +5,12 @@ import com.example.authservice.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
 
 @Slf4j
 @RestController
@@ -24,9 +28,21 @@ public class UserController {
     }
 
     @PostMapping("/join")
-    public UserJoinResponseDTO join(@RequestBody UserJoinRequestDTO userJoinRequestDTO) {
+    public ResponseEntity<UserJoinResponseDTO> join(@RequestBody UserJoinRequestDTO userJoinRequestDTO) {
         log.info("join :: {}", userJoinRequestDTO.getUserName() + " " + userJoinRequestDTO.getEmail());
-        return userService.join(userJoinRequestDTO.toUser(bCryptPasswordEncoder),userJoinRequestDTO.toAddress());
+        //return userService.join(userJoinRequestDTO.toUser(bCryptPasswordEncoder),userJoinRequestDTO.toAddress());
+        UserJoinResponseDTO result = userService.join(
+                userJoinRequestDTO.toUser(bCryptPasswordEncoder),
+                userJoinRequestDTO.toAddress()
+        );
+
+        if (result.isSuccess()) {
+            return ResponseEntity.ok(result);
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST) // or HttpStatus.UNPROCESSABLE_ENTITY
+                    .body(result);
+        }
     }
 
     @PostMapping("/login/oauth")

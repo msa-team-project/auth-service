@@ -3,12 +3,14 @@ package com.example.authservice.service;
 import com.example.authservice.config.redis.RedisUtil;
 import com.example.authservice.config.security.CustomUserDetails;
 import com.example.authservice.dto.*;
+import com.example.authservice.exception.EmailNotVerifiedException;
 import com.example.authservice.mapper.AddressMapper;
 import com.example.authservice.mapper.UserMapper;
 import com.example.authservice.model.Address;
 import com.example.authservice.model.Social;
 import com.example.authservice.model.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -21,6 +23,7 @@ import java.time.Duration;
 import static com.example.authservice.type.Role.ROLE_USER;
 import static com.example.authservice.type.Type.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -67,34 +70,50 @@ public class UserService {
 
         String email = user.getEmail();
 
-        if (!redisUtil.existData(email + ":verified") || !"true".equals(redisUtil.getData(email + ":verified"))) {
-            throw new RuntimeException("이메일 인증이 필요합니다.");
-        }
 
-        // 1) save 후 null 체크를 최우선으로
-        User result = userMapper.save(user);
-        if (result == null) {
-            // save 가 실패했다면 NPE 대신 곧바로 실패 DTO 리턴
+        if (!redisUtil.existData(email + ":verified") || !"true".equals(redisUtil.getData(email + ":verified"))) {
             return UserJoinResponseDTO.builder()
                     .isSuccess(false)
+                    .message("이메일 인증이 필요합니다.")
                     .build();
         }
 
-        // 2) result 가 null 이 아니면 정상적으로 address 처리
+        User result = userMapper.save(user);
+        if (result == null) {
+            return UserJoinResponseDTO.builder()
+                    .isSuccess(false)
+                    .message("사용자 저장에 실패했습니다.")
+                    .build();
+        }
+
+        if (result.getUid() == 0) {
+            return UserJoinResponseDTO.builder()
+                    .isSuccess(false)
+                    .message("사용자 UID 생성 실패")
+                    .build();
+        }
+
         address.setUserUid(result.getUid());
-        addressMapper.insertAddress(address);
+        int addressResult = addressMapper.insertAddress(address);
+        log.info("address insert result: {}", addressResult);
 
-        // 3) 인증 플래그 제거 및 성공 DTO 반환
+        if (addressResult <= 0) {
+            return UserJoinResponseDTO.builder()
+                    .isSuccess(false)
+                    .message("주소 저장에 실패했습니다.")
+                    .build();
+        }
+
         redisUtil.deleteData(email + ":verified");
-        return UserJoinResponseDTO.builder()
+        UserJoinResponseDTO response = UserJoinResponseDTO.builder()
                 .isSuccess(true)
+                .message("회원가입 성공")
                 .build();
+
+        System.out.println("[디버그] 응답 DTO: " + response);
+        return response;
     }
 
-    //이메일 인증 코드 검증 로직
-    public boolean verifyEmail(String email, String code) {
-        return emailService.verifyEmailCode(email, code);
-    }
 
     @Transactional
     public OAuthLoginResponseDTO oauthLogin(OAuthLoginRequestDTO oauthDTO){

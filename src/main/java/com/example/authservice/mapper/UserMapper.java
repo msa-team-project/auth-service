@@ -9,12 +9,12 @@ import org.apache.ibatis.annotations.Mapper;
 public interface UserMapper {
 
     // 실제 데이터 삽입을 수행하는 메서드 (반환타입은 void나 int)
-    void insertUser(User user);
+    int insertUser(User user);
 
     // 기존의 save 메서드를 default 메서드로 구현하여 파라미터 객체를 반환
     default User save(User user) {
-        insertUser(user); // insertUser를 호출하면 useGeneratedKeys 옵션에 의해 user.uid가 자동 채워짐
-        return user;
+        int rows = insertUser(user);
+        return rows > 0 ? user : null;
     }
 
     int countByEmail(@Param("email") String email);
