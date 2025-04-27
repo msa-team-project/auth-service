@@ -22,22 +22,27 @@ public class EmailController {
     private final EmailService emailService;
     private final UserMapper userMapper;
 
-    // 이메일로 인증 코드 받기
-    @GetMapping("/{email:.+}/authcode")
-    public ResponseEntity<String> sendEmailPath(@PathVariable String email) throws MessagingException, IOException {
+    // 1) 프론트에서 생성한 코드 저장 (POST)
+    @PostMapping("/{email:.+}/authcode")
+    public ResponseEntity<Void> storeCode(
+            @PathVariable String email,
+            @RequestBody EmailRequestDTO dto
+    ) {
         if (userMapper.countByEmail(email) > 0) {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }
-
-        emailService.sendEmail(email);
-        log.info("Requested email: " + email);
-        return ResponseEntity.ok("이메일을 확인하세요");
+        emailService.storeCode(email, dto.getCode());
+        return ResponseEntity.ok().build();
     }
 
-    // 인증 코드를 입력한 후 난수 생성
-    @PostMapping("/{email:.+}/authcode")
-    public ResponseEntity<String> sendEmailAndCode(@PathVariable String email, @RequestBody EmailRequestDTO emailRequestDTO) throws NoSuchAlgorithmException {
-        if (emailService.verifyEmailCode(email, emailRequestDTO.getCode())) {
+    // 2) 코드 검증 → memberId 반환
+    // 이메일 인증이 성공했을 때 반환되는 고유 토큰
+    @PostMapping("/{email:.+}/authcode/verify")
+    public ResponseEntity<String> verify(
+            @PathVariable String email,
+            @RequestBody EmailRequestDTO dto
+    ) throws NoSuchAlgorithmException {
+        if (emailService.verifyEmailCode(email, dto.getCode())) {
             return ResponseEntity.ok(emailService.makeMemberId(email));
         }
         return ResponseEntity.notFound().build();
