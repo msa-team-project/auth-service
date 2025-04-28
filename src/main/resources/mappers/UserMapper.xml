@@ -33,7 +33,7 @@
 
     <insert id="insertUser" parameterType="User" useGeneratedKeys="true" keyProperty="uid">
         INSERT INTO user (user_id,password,user_name,email,emailyn,phone,phoneyn,role)
-        VALUES (#{userId},#{password},#{userName}, #{email}, #{emailyn}, #{phone}, #{phoneyn},#{role});
+        VALUES (#{userId}, #{password}, #{userName}, #{email}, #{emailyn}, #{phone}, #{phoneyn}, #{role})
     </insert>
 
     <select id="countByEmail" parameterType="String" resultType="int">

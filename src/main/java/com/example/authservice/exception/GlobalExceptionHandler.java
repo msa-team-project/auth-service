@@ -27,6 +27,14 @@ public class GlobalExceptionHandler {
         return "에러 발생" + ex.getMessage();
     }
 
+    //이메일 미인증시 404처리
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<?> handleEmailNotVerified(EmailNotVerifiedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(Collections.singletonMap("message", ex.getMessage()));
+    }
+
     //이메일 중복시 400처리
     @ExceptionHandler({ IllegalArgumentException.class, IllegalStateException.class })
     public ResponseEntity<Map<String,String>> handleBadRequest(RuntimeException ex) {
@@ -34,5 +42,6 @@ public class GlobalExceptionHandler {
                 .badRequest()
                 .body(Collections.singletonMap("message", ex.getMessage()));
     }
+
 }
 
