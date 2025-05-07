@@ -289,6 +289,7 @@ public class UserService {
 
             return UserInfoResponseDTO.builder()
                     .id(Long.valueOf(findSocial.getUid()))
+                    .type("social")
                     .userId(findSocial.getUserId())
                     .userName(findSocial.getUserName())
                     .role(findSocial.getRole())
@@ -299,6 +300,7 @@ public class UserService {
 
             return UserInfoResponseDTO.builder()
                     .id(Long.valueOf(findUser.getUid()))
+                    .type("user")
                     .userId(findUser.getUserId())
                     .userName(findUser.getUserName())
                     .role(findUser.getRole())

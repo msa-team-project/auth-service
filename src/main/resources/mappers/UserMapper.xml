@@ -105,7 +105,7 @@
             user_id = #{userId};
     </update>
 
-    <update id="updateSocial" parameterType="Social" (useGeneratedKeys="true" keyProperty="uid")>
+    <update id="updateSocial" parameterType="Social" useGeneratedKeys="true" keyProperty="uid">
         UPDATE
             social
         SET
