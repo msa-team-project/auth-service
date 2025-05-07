@@ -142,14 +142,15 @@ public class UserService {
 
             if(newSocial != null){
                 int result = userMapper.saveSocial(newSocial);
+                System.out.println("DB 회원정보 저장함");
                 if(result == 1){
                     Social social = userMapper.findSocialByUserId(newSocial.getUserId());
                     // redis에 저장
                     tokenProviderService.saveTokensToRedis(tokens[0].toUpperCase()+":"+oauthDTO.getId(), oauthDTO.getAccessToken(), oauthDTO.getRefreshToken());
-
+                    System.out.println("redis 토큰 저장함");
                     // DB에 저장
                     tokenProviderService.saveTokenToDatabase("social",social.getUid(),oauthDTO.getAccessToken(),oauthDTO.getRefreshToken());
-
+                    System.out.println("DB 토큰 저장함");
                     return OAuthLoginResponseDTO.builder()
                             .loggedIn(true)
                             .type(newSocial.getType())
@@ -288,6 +289,7 @@ public class UserService {
 
             return UserInfoResponseDTO.builder()
                     .id(Long.valueOf(findSocial.getUid()))
+                    .type("social")
                     .userId(findSocial.getUserId())
                     .userName(findSocial.getUserName())
                     .role(findSocial.getRole())
@@ -298,6 +300,7 @@ public class UserService {
 
             return UserInfoResponseDTO.builder()
                     .id(Long.valueOf(findUser.getUid()))
+                    .type("user")
                     .userId(findUser.getUserId())
                     .userName(findUser.getUserName())
                     .role(findUser.getRole())
