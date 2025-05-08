@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EmailNotVerifiedException.class)
     public ResponseEntity<?> handleEmailNotVerified(EmailNotVerifiedException ex) {
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(HttpStatus.NOT_FOUND)
                 .body(Collections.singletonMap("message", ex.getMessage()));
     }
 

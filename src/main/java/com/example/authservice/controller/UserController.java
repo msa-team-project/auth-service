@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -27,22 +28,21 @@ public class UserController {
         return userService.login(userLoginRequestDTO.getUserId(), userLoginRequestDTO.getPassword());
     }
 
+    @GetMapping("/check-id")
+    public ResponseEntity<Map<String,Boolean>> checkUserId(@RequestParam String userId) {
+        boolean exists = userService.existsByUserId(userId);
+        log.info("check-id: " + userId);
+        return ResponseEntity.ok(Collections.singletonMap("exists", exists));
+    }
+
     @PostMapping("/join")
     public ResponseEntity<UserJoinResponseDTO> join(@RequestBody UserJoinRequestDTO userJoinRequestDTO) {
         log.info("join :: {}", userJoinRequestDTO.getUserName() + " " + userJoinRequestDTO.getEmail());
-        //return userService.join(userJoinRequestDTO.toUser(bCryptPasswordEncoder),userJoinRequestDTO.toAddress());
-        UserJoinResponseDTO result = userService.join(
+        UserJoinResponseDTO response = userService.join(
                 userJoinRequestDTO.toUser(bCryptPasswordEncoder),
                 userJoinRequestDTO.toAddress()
         );
-
-        if (result.isSuccess()) {
-            return ResponseEntity.ok(result);
-        } else {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST) // or HttpStatus.UNPROCESSABLE_ENTITY
-                    .body(result);
-        }
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login/oauth")

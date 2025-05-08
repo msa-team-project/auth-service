@@ -11,6 +11,7 @@ import com.example.authservice.model.Social;
 import com.example.authservice.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -66,42 +67,44 @@ public class UserService {
     }
 
     @Transactional
+    public boolean existsByUserId(String userId) {
+        return userMapper.findUserByUserId(userId) != null;
+    }
+
+    @Transactional
     public UserJoinResponseDTO join(User user, Address address) {
 
         String email = user.getEmail();
+        String userId = user.getUserId();
 
-
-        if (!redisUtil.existData(email + ":verified") || !"true".equals(redisUtil.getData(email + ":verified"))) {
-            return UserJoinResponseDTO.builder()
-                    .isSuccess(false)
-                    .message("이메일 인증이 필요합니다.")
-                    .build();
+        // 1) 이메일 인증 체크 → 미인증이면 예외
+        if (!redisUtil.existData(email + ":verified")
+                || !"true".equals(redisUtil.getData(email + ":verified"))) {
+            throw new EmailNotVerifiedException("이메일 인증이 필요합니다.");
         }
 
-        User result = userMapper.save(user);
-        if (result == null) {
-            return UserJoinResponseDTO.builder()
-                    .isSuccess(false)
-                    .message("사용자 저장에 실패했습니다.")
-                    .build();
+        // 2) 아이디 중복 검사 → 이미 있으면 예외
+        if (existsByUserId(userId)) {
+            throw new IllegalArgumentException("이미 사용중인 아이디입니다.");
         }
 
-        if (result.getUid() == 0) {
-            return UserJoinResponseDTO.builder()
-                    .isSuccess(false)
-                    .message("사용자 UID 생성 실패")
-                    .build();
+        // 3) 사용자 저장 → DB UNIQUE 위반 시 DataAccessException 계열 예외
+        try {
+            userMapper.insertUser(user);
+        } catch (DuplicateKeyException ex) {
+            throw new IllegalArgumentException("이미 사용중인 아이디입니다.", ex);
         }
 
-        address.setUserUid(result.getUid());
+        // 4) UID 정상 생성 확인
+        if (user.getUid() == 0) {
+            throw new RuntimeException("사용자 UID 생성 실패");
+        }
+
+        // 5) 주소 저장
+        address.setUserUid(user.getUid());
         int addressResult = addressMapper.insertAddress(address);
-        log.info("address insert result: {}", addressResult);
-
         if (addressResult <= 0) {
-            return UserJoinResponseDTO.builder()
-                    .isSuccess(false)
-                    .message("주소 저장에 실패했습니다.")
-                    .build();
+            throw new RuntimeException("주소 저장에 실패했습니다.");
         }
 
         redisUtil.deleteData(email + ":verified");
