@@ -355,6 +355,7 @@ public class UserService {
                     .userName(findUser.getUserName())
                     .email(findUser.getEmail())
                     .phone(findUser.getPhone())
+                    .type(USER)
                     .point(findUser.getPoint())
                     .role(findUser.getRole())
                     .createdDate(findUser.getCreatedDate())
