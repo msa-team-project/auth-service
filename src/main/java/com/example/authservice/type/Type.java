@@ -3,5 +3,6 @@ package com.example.authservice.type;
 public enum Type {
     NAVER,
     KAKAO,
-    GOOGLE
+    GOOGLE,
+    USER
 }
