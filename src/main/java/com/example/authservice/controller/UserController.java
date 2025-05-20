@@ -3,6 +3,7 @@ package com.example.authservice.controller;
 import com.example.authservice.dto.*;
 import com.example.authservice.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -36,12 +37,9 @@ public class UserController {
     }
 
     @PostMapping("/join")
-    public ResponseEntity<UserJoinResponseDTO> join(@RequestBody UserJoinRequestDTO userJoinRequestDTO) {
-        log.info("join :: {}", userJoinRequestDTO.getUserName() + " " + userJoinRequestDTO.getEmail());
-        UserJoinResponseDTO response = userService.join(
-                userJoinRequestDTO.toUser(bCryptPasswordEncoder),
-                userJoinRequestDTO.toAddress()
-        );
+    public ResponseEntity<UserJoinResponseDTO> join(@RequestBody @Valid UserJoinRequestDTO userJoinRequestDTO) {
+        log.info("join :: {} {}", userJoinRequestDTO.getUserName(), userJoinRequestDTO.getEmail());
+        UserJoinResponseDTO response = userService.join(userJoinRequestDTO);
         return ResponseEntity.ok(response);
     }
 

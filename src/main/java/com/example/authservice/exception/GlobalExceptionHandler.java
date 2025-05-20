@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
 
     //이메일 미인증시 404처리
     @ExceptionHandler(EmailNotVerifiedException.class)
-    public ResponseEntity<?> handleEmailNotVerified(EmailNotVerifiedException ex) {
+    public ResponseEntity<Map<String,String>> handleEmailNotVerified(EmailNotVerifiedException ex) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(Collections.singletonMap("message", ex.getMessage()));
