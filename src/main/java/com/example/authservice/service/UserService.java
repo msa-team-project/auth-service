@@ -1,5 +1,6 @@
 package com.example.authservice.service;
 
+import com.example.authservice.client.AiClient;
 import com.example.authservice.config.redis.RedisUtil;
 import com.example.authservice.config.security.CustomUserDetails;
 import com.example.authservice.dto.*;
@@ -16,6 +17,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +37,7 @@ public class UserService {
     private final TokenProviderService tokenProviderService;
     private final EmailService emailService;
     private final RedisUtil redisUtil;
+    private final AiClient aiClient;
 
     @Transactional
     public UserLoginResponseDTO login(String username, String password) {
@@ -72,49 +75,74 @@ public class UserService {
     }
 
     @Transactional
-    public UserJoinResponseDTO join(User user, Address address) {
-
-        String email = user.getEmail();
-        String userId = user.getUserId();
-
-        // 1) 이메일 인증 체크 → 미인증이면 예외
-        if (!redisUtil.existData(email + ":verified")
-                || !"true".equals(redisUtil.getData(email + ":verified"))) {
+    public UserJoinResponseDTO join(UserJoinRequestDTO userJoinRequestDTO) {
+        // 1) 이메일 인증 체크
+        String email = userJoinRequestDTO.getEmail();
+        if (!redisUtil.existData(email + ":verified") ||
+                !"true".equals(redisUtil.getData(email + ":verified"))) {
             throw new EmailNotVerifiedException("이메일 인증이 필요합니다.");
         }
 
-        // 2) 아이디 중복 검사 → 이미 있으면 예외
+        String userId = userJoinRequestDTO.getUserId();
+
+        // 2) 아이디 중복 검사
         if (existsByUserId(userId)) {
             throw new IllegalArgumentException("이미 사용중인 아이디입니다.");
         }
 
-        // 3) 사용자 저장 → DB UNIQUE 위반 시 DataAccessException 계열 예외
+        // 3) User/Address 엔티티 변환 및 저장
+        User user = userJoinRequestDTO.toUser(new BCryptPasswordEncoder()); // toUser()는 DTO에서 엔티티로 변환하는 메서드
         try {
             userMapper.insertUser(user);
         } catch (DuplicateKeyException ex) {
             throw new IllegalArgumentException("이미 사용중인 아이디입니다.", ex);
         }
 
-        // 4) UID 정상 생성 확인
         if (user.getUid() == 0) {
             throw new RuntimeException("사용자 UID 생성 실패");
         }
 
-        // 5) 주소 저장
+        Address address = userJoinRequestDTO.toAddress();
         address.setUserUid(user.getUid());
         int addressResult = addressMapper.insertAddress(address);
         if (addressResult <= 0) {
             throw new RuntimeException("주소 저장에 실패했습니다.");
         }
 
+        // 4) 이메일 인증 정보 삭제
         redisUtil.deleteData(email + ":verified");
+
+        // 5) 알러지 정보 AI 서비스로 전송 (DTO에서 추출)
+        notifyAiAboutAllergy(userJoinRequestDTO, user.getUid());
+
+        // 6) 응답 DTO 생성 및 반환
         UserJoinResponseDTO response = UserJoinResponseDTO.builder()
                 .isSuccess(true)
                 .message("회원가입 성공")
                 .build();
 
-        System.out.println("[디버그] 응답 DTO: " + response);
+        log.debug("[디버그] 응답 DTO: {}", response);
         return response;
+    }
+
+    //Ai 서비스로 알러지 정보 전송
+    private void notifyAiAboutAllergy(UserJoinRequestDTO dto, int userUid) {
+        if (dto.getAllergies() == null || dto.getAllergies().isEmpty()) {
+            log.info("알러지 정보가 없으므로 AI 호출을 생략합니다.");
+            return;
+        }
+
+        AllergyInfoRequestDTO allergyInfo = AllergyInfoRequestDTO.builder()
+                .userUid((long) userUid)
+                .allergies(dto.getAllergies())
+                .build();
+
+        try {
+            aiClient.sendAllergyInfo(allergyInfo.getUserUid(), allergyInfo);
+            log.info("AI 서비스에 알러지 정보 전송 완료: {}", allergyInfo);
+        } catch (Exception e) {
+            log.warn("AI 서비스 알러지 정보 전송 실패: {}", e.getMessage(), e);
+        }
     }
 
 

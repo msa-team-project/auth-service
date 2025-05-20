@@ -1,6 +1,7 @@
 package com.example.authservice.controller;
 
 import com.example.authservice.dto.EmailRequestDTO;
+import com.example.authservice.exception.EmailNotVerifiedException;
 import com.example.authservice.mapper.UserMapper;
 import com.example.authservice.service.EmailService;
 import com.example.authservice.service.UserService;
@@ -45,6 +46,7 @@ public class EmailController {
         if (emailService.verifyEmailCode(email, dto.getCode())) {
             return ResponseEntity.ok(emailService.makeMemberId(email));
         }
-        return ResponseEntity.notFound().build();
+        // 인증코드 불일치 시 404
+        throw new EmailNotVerifiedException("인증 코드가 올바르지 않습니다.");
     }
 }
