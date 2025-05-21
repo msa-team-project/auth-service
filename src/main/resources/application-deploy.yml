@@ -28,4 +28,4 @@ jwt:
   secret_key: ${JWT_SECRET_KEY}
 
 ai:
-  url: ${ai-service:http://localhost:9008}
+  url: ${ai-service}
