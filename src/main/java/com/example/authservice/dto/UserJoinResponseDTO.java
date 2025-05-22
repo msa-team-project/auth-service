@@ -12,4 +12,5 @@ public class UserJoinResponseDTO {
     @JsonProperty("success")
     private boolean isSuccess;
     private String message;
+    private int userUid;
 }

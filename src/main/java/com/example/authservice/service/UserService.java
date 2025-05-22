@@ -113,20 +113,21 @@ public class UserService {
         redisUtil.deleteData(email + ":verified");
 
         // 5) 알러지 정보 AI 서비스로 전송 (DTO에서 추출)
-        notifyAiAboutAllergy(userJoinRequestDTO, user.getUid());
+        // notifyAiAboutAllergy(userJoinRequestDTO, user.getUid());
 
         // 6) 응답 DTO 생성 및 반환
         UserJoinResponseDTO response = UserJoinResponseDTO.builder()
                 .isSuccess(true)
                 .message("회원가입 성공")
+                .userUid(user.getUid())
                 .build();
 
         log.debug("[디버그] 응답 DTO: {}", response);
         return response;
     }
 
-    //Ai 서비스로 알러지 정보 전송
-    private void notifyAiAboutAllergy(UserJoinRequestDTO dto, int userUid) {
+    // 트랜잭션 밖에서 Ai서비스로 알러지 정보 전송
+    public void notifyAiAboutAllergy(UserJoinRequestDTO dto, int userUid) {
         if (dto.getAllergies() == null || dto.getAllergies().isEmpty()) {
             log.info("알러지 정보가 없으므로 AI 호출을 생략합니다.");
             return;
@@ -138,7 +139,7 @@ public class UserService {
                 .build();
 
         try {
-            aiClient.sendAllergyInfo(allergyInfo.getUserUid(), allergyInfo);
+            aiClient.sendAllergyInfo(allergyInfo);
             log.info("AI 서비스에 알러지 정보 전송 완료: {}", allergyInfo);
         } catch (Exception e) {
             log.warn("AI 서비스 알러지 정보 전송 실패: {}", e.getMessage(), e);
@@ -536,5 +537,9 @@ public class UserService {
                             .build()) > 0;
             return userResult && addressResult;
         }
+    }
+
+    public EmailService getEmailService() {
+        return emailService;
     }
 }
