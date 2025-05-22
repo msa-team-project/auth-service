@@ -28,4 +28,4 @@ jwt:
   secret_key: ${JWT_SECRET_KEY}
 
 ai:
-  url: ${ai-service}
+  url: ${AI_SERVICE_URL}
