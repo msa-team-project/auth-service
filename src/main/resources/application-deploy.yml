@@ -1,0 +1,31 @@
+server:
+  port: 9002
+
+spring:
+  application:
+    name: auth-service
+  web:
+    resources:
+      add-mappings: false
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${SPRING_DATASOURCE_USER}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  data:
+    redis:
+      port: ${REDIS_PORT}
+      host: ${REDIS_URL}
+      password: ${REDIS_PASSWORD}
+      username: ${REDIS_USER}
+
+mybatis:
+  mapper-locations: classpath:mappers/*.xml
+  type-aliases-package: com.example.authservice.model
+
+jwt:
+  issuer: ${JWT_ISSUER}
+  secret_key: ${JWT_SECRET_KEY}
+
+ai:
+  url: ${AI_SERVICE_URL}
