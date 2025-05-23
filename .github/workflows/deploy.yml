@@ -26,12 +26,12 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t front-service:latest .
+          docker build -t auth-service:latest .
 
       - name: Tag Docker image
         run: |
-          docker tag edge-service:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/front-service:latest
+          docker tag auth-service:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/auth-service:latest
 
       - name: Push Docker image to Amazon ECR
         run: |
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/front-service:latest
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/auth-service:latest
