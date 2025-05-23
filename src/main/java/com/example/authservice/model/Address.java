@@ -8,7 +8,7 @@ import lombok.Setter;
 @Setter
 @Builder
 public class Address {
-    private int uid;
+    private Long uid;
     private Integer userUid;
     private Integer socialUid;
     private String mainAddress;

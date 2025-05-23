@@ -39,7 +39,11 @@ public class UserController {
     @PostMapping("/join")
     public ResponseEntity<UserJoinResponseDTO> join(@RequestBody @Valid UserJoinRequestDTO userJoinRequestDTO) {
         log.info("join :: {} {}", userJoinRequestDTO.getUserName(), userJoinRequestDTO.getEmail());
+        // 1.회원 정보/주소 저장 + UID 생성(여기까지가 트랜잭션)
         UserJoinResponseDTO response = userService.join(userJoinRequestDTO);
+        // 2.트랜잭션 커밋 후 알러지 정보 전송
+        userService.notifyAiAboutAllergy(userJoinRequestDTO,response.getUserUid());
+
         return ResponseEntity.ok(response);
     }
 
