@@ -1,9 +1,12 @@
 package com.example.authservice.mapper;
 
+import com.example.authservice.dto.ManagerDTO;
 import com.example.authservice.model.Social;
 import com.example.authservice.model.User;
 import feign.Param;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 @Mapper
 public interface UserMapper {
@@ -28,4 +31,5 @@ public interface UserMapper {
     int activeSocial(String userId);
     int updateSocial(Social social);
     int updateUser(User user);
+    List<ManagerDTO> findManagers();
 }
