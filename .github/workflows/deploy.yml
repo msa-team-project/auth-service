@@ -47,7 +47,7 @@ jobs:
             --from-literal=REDIS_USER=${{ secrets.REDIS_USER }} \
             --from-literal=JWT_ISSUER=${{ secrets.JWT_ISSUER }} \
             --from-literal=JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
-            --dry-run=client -o yaml | kubectl apply -f -
+            --dry-run=client -o yaml | kubectl apply --validate=false -f -
 
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
