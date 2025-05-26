@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+spec:
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      nodeSelector:
+        role: main
+      containers:
+        - name: auth-service
+          image: 448049828702.dkr.ecr.ap-northeast-2.amazonaws.com/auth-service:latest
+          imagePullPolicy: Always
+          lifecycle:
+            preStop:
+              exec:
+                command: [ "sh", "-c", "sleep 5" ]
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "400Mi"
+            limits:
+              cpu: "600m"
+              memory: "700Mi"
+          ports:
+            - containerPort: 9002
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://sandit-mysql:3306/auth?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_URL
+              value: $(REDIS_IP)
+            - name: AI_SERVICE_URL
+              value: http://ai-service:80
+            - name: SPRING_PROFILES_ACTIVE
+              value: deploy
+            - name: SPRING_DATASOURCE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: auth-service-secrets
+                  key: SPRING_DATASOURCE_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: auth-service-secrets
+                  key: SPRING_DATASOURCE_PASSWORD
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: auth-service-secrets
+                  key: REDIS_PASSWORD
+            - name: REDIS_USER
+              valueFrom:
+                secretKeyRef:
+                  name: auth-service-secrets
+                  key: REDIS_USER
+            - name: JWT_ISSUER
+              valueFrom:
+                secretKeyRef:
+                  name: auth-service-secrets
+                  key: JWT_ISSUER
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: auth-service-secrets
+                  key: JWT_SECRET_KEY

@@ -32,4 +32,5 @@ public interface UserMapper {
     int updateSocial(Social social);
     int updateUser(User user);
     List<ManagerDTO> findManagers();
+    void finalDeleteUser(int userId);
 }
