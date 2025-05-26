@@ -29,9 +29,6 @@ jobs:
         run: |
           aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name sandit-cluster
 
-      - name: iam role check
-        run: aws sts get-caller-identity
-
       - name: Create Kubernetes Secrets from GitHub Secrets
         run: |
           kubectl create secret generic auth-service-secrets \
