@@ -57,4 +57,4 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl apply -f auth-service/k8s/
+          kubectl apply -f k8s/
