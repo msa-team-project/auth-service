@@ -143,6 +143,9 @@ public class UserService {
             log.info("AI 서비스에 알러지 정보 전송 완료: {}", allergyInfo);
         } catch (Exception e) {
             log.warn("AI 서비스 알러지 정보 전송 실패: {}", e.getMessage(), e);
+            User findUser = userMapper.findUserByUserUid(userUid);
+            addressMapper.finalDeleteUserAddress(findUser.getUid());
+            userMapper.finalDeleteUser(findUser.getUid());
         }
     }
 

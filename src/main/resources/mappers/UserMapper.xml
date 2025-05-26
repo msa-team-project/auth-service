@@ -114,4 +114,9 @@
             user_id = #{userId};
     </update>
 
+    <delete id="finalDeleteUser" parameterType="Integer">
+        DELETE FROM user
+        WHERE uid = #{userUid}
+    </delete>
+
 </mapper>

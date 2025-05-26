@@ -70,4 +70,9 @@
         WHERE social_uid = #{socialUid}
     </update>
 
+    <delete id="finalDeleteUserAddress" parameterType="Integer">
+        DELETE FROM user_address
+        WHERE user_uid = #{userUid}
+    </delete>
+
 </mapper>

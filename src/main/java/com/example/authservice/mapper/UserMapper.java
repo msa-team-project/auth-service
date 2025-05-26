@@ -28,4 +28,5 @@ public interface UserMapper {
     int activeSocial(String userId);
     int updateSocial(Social social);
     int updateUser(User user);
+    void finalDeleteUser(int userId);
 }
