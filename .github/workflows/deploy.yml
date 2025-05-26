@@ -25,38 +25,29 @@ jobs:
         with:
           version: 'latest'   # 원하는 버전 지정 가능 (예: 'v1.27.3')
 
-      - name: Authenticate to EKS and create secret
+      - name: Configure kubeconfig for EKS cluster
         run: |
           aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name sandit-cluster
-          aws eks get-token --region ${{ secrets.AWS_REGION }} --cluster-name sandit-cluster > /dev/null
 
-          kubectl create secret generic delivery-service-secrets \
-            --from-literal=SPRING_DATASOURCE_USER=${{ secrets.SPRING_DATASOURCE_USER }} \
-            --from-literal=SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }} \
-            --from-literal=DELIVERY_S3_ACCESS_KEY_ID=${{ secrets.DELIVERY_S3_ACCESS_KEY_ID }} \
-            --from-literal=DELIVERY_S3_SECRET_ACCESS_KEY=${{ secrets.DELIVERY_S3_SECRET_ACCESS_KEY }} \
-            --dry-run=client -o yaml | kubectl apply --validate=false -f -
-        
-
-        # EKS 클러스터 접근을 위한 인증 토큰 생성 (15분짜리 임시 토큰)
-        # GitHub Actions 환경에서는 자동으로 토큰 갱신이 안 되기 때문에,
-        # kubectl apply 전에 수동으로 한 번 토큰 생성해서 인증 상태 확인해 줌
-        # 이걸 안 넣으면 "failed to download openapi" 같은 인증 에러 발생 가능성 있음
-
+#        # EKS 클러스터 접근을 위한 인증 토큰 생성 (15분짜리 임시 토큰)
+#        # GitHub Actions 환경에서는 자동으로 토큰 갱신이 안 되기 때문에,
+#        # kubectl apply 전에 수동으로 한 번 토큰 생성해서 인증 상태 확인해 줌
+#        # 이걸 안 넣으면 "failed to download openapi" 같은 인증 에러 발생 가능성 있음
+#
 #      - name: Authenticate to EKS (generate token)
 #        run: |
 #          aws eks get-token --region ${{ secrets.AWS_REGION }} --cluster-name sandit-cluster > /dev/null
-#
-#      - name: Create Kubernetes Secrets from GitHub Secrets
-#        run: |
-#          kubectl create secret generic auth-service-secrets \
-#            --from-literal=SPRING_DATASOURCE_USER=${{ secrets.SPRING_DATASOURCE_USER }} \
-#            --from-literal=SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }} \
-#            --from-literal=REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }} \
-#            --from-literal=REDIS_USER=${{ secrets.REDIS_USER }} \
-#            --from-literal=JWT_ISSUER=${{ secrets.JWT_ISSUER }} \
-#            --from-literal=JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
-#            --dry-run=client -o yaml | kubectl apply --validate=false -f -
+
+      - name: Create Kubernetes Secrets from GitHub Secrets
+        run: |
+          kubectl create secret generic auth-service-secrets \
+            --from-literal=SPRING_DATASOURCE_USER=${{ secrets.SPRING_DATASOURCE_USER }} \
+            --from-literal=SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }} \
+            --from-literal=REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }} \
+            --from-literal=REDIS_USER=${{ secrets.REDIS_USER }} \
+            --from-literal=JWT_ISSUER=${{ secrets.JWT_ISSUER }} \
+            --from-literal=JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
+            --dry-run=client -o yaml | kubectl apply --validate=false -f -
 
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
