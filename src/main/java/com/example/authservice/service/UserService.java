@@ -22,6 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.example.authservice.type.Role.ROLE_USER;
 import static com.example.authservice.type.Type.*;
@@ -143,6 +145,9 @@ public class UserService {
             log.info("AI 서비스에 알러지 정보 전송 완료: {}", allergyInfo);
         } catch (Exception e) {
             log.warn("AI 서비스 알러지 정보 전송 실패: {}", e.getMessage(), e);
+            User findUser = userMapper.findUserByUserUid(userUid);
+            addressMapper.finalDeleteUserAddress(findUser.getUid());
+            userMapper.finalDeleteUser(findUser.getUid());
         }
     }
 
@@ -541,5 +546,9 @@ public class UserService {
 
     public EmailService getEmailService() {
         return emailService;
+    }
+
+    public List<ManagerDTO> getManagers() {
+        return userMapper.findManagers();
     }
 }

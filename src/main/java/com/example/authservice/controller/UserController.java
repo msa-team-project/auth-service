@@ -1,6 +1,7 @@
 package com.example.authservice.controller;
 
 import com.example.authservice.dto.*;
+import com.example.authservice.model.User;
 import com.example.authservice.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -12,7 +13,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -34,6 +37,13 @@ public class UserController {
         boolean exists = userService.existsByUserId(userId);
         log.info("check-id: " + userId);
         return ResponseEntity.ok(Collections.singletonMap("exists", exists));
+    }
+    // ROLL이 MANAGER인 유저정보(USER_UID,USER_ID,USER_NAME)가져오기
+    @GetMapping("/managers")
+    public ResponseEntity<List<ManagerDTO>> getManagers() {
+        List<ManagerDTO> managers = userService.getManagers();
+        log.info("managers : " + managers);
+        return ResponseEntity.ok(managers);
     }
 
     @PostMapping("/join")

@@ -114,4 +114,18 @@
             user_id = #{userId};
     </update>
 
+    <select id="findManagers" resultType="com.example.authservice.dto.ManagerDTO">
+        SELECT
+                uid AS userUid,
+                user_id AS userId,
+                user_name AS userName
+        FROM user
+        WHERE role = 'ROLE_MANAGER' AND status ='active';
+    </select>
+
+    <delete id="finalDeleteUser" parameterType="Integer">
+        DELETE FROM user
+        WHERE uid = #{userUid}
+    </delete>
+
 </mapper>
