@@ -3,9 +3,12 @@ package com.example.authservice.dto;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 @Builder
 public class UpdateProfileRequestDTO {
+    private int uid;
     private String userName;
     private String email;
     private String emailyn;
@@ -20,4 +23,5 @@ public class UpdateProfileRequestDTO {
     private double subLan1;
     private double subLat2;
     private double subLan2;
+    private List<String> allergies;
 }

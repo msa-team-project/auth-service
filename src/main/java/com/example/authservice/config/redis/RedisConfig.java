@@ -7,6 +7,8 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -37,12 +39,23 @@ public class RedisConfig {
         return lettuceConnectionFactory;
     }
 
+    // 문자열 key + 문자열 value
     @Bean
-    public RedisTemplate<String, Object> redisTemplate() {
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(redisConnectionFactory());
-        redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(new StringRedisSerializer());
-        return redisTemplate;
+    public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory factory) {
+        return new StringRedisTemplate(factory);
+    }
+
+    @Bean(name = "objectRedisTemplate")
+    public RedisTemplate<String, Object> objectRedisTemplate(RedisConnectionFactory factory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(factory);
+
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+
+        template.afterPropertiesSet();
+        return template;
     }
 }
