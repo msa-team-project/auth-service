@@ -473,6 +473,8 @@ public class UserService {
         if(isSocial){
             Social findSocial = userMapper.findSocialByUserId(splitArr[1]);
 
+            redisUtil.setObjectDataExpire("socialInfo:"+findSocial.getUid(), findSocial, 60 * 30L);
+
             boolean socialResult = userMapper.updateSocial(
                     Social.builder()
                             .userId(splitArr[1])
@@ -483,6 +485,9 @@ public class UserService {
                             .phoneyn(updateProfileRequestDTO.getPhoneyn())
                             .build()) > 0 ;
             Address findAddress = addressMapper.findBySocialUid(findSocial.getUid());
+
+            redisUtil.setObjectDataExpire("socialAddressInfo:"+findSocial.getUid(), findAddress, 60 * 30L);
+
             boolean addressResult;
             if(findAddress == null){
                 addressResult = addressMapper.insertAddress(
@@ -515,9 +520,11 @@ public class UserService {
             }
             return socialResult && addressResult;
         }else{
+            log.info("before excute user profile update");
             User findUser = tokenProviderService.getTokenDetails(token);
-
-            System.out.println("user name " + findUser.getUserName());
+            log.info("defore save redis user info");
+            redisUtil.setObjectDataExpire("userInfo:"+findUser.getUid(), findUser, 60 * 30L);
+            log.info("after save redis user info");
             boolean userResult =  userMapper.updateUser(
                     User.builder()
                             .userId(findUser.getUserId())
@@ -527,6 +534,11 @@ public class UserService {
                             .phone(updateProfileRequestDTO.getPhone())
                             .phoneyn(updateProfileRequestDTO.getPhoneyn())
                             .build()) > 0 ;
+            log.info("before excute address update");
+            Address findAddress = addressMapper.findByUserUid(findUser.getUid());
+            log.info("before save redis address update");
+            redisUtil.setObjectDataExpire("userAddressInfo:"+findUser.getUid(), findAddress, 60 * 30L);
+
             boolean addressResult = addressMapper.updateAddressByUserUId(
                     Address.builder()
                             .userUid(findUser.getUid())
@@ -541,6 +553,63 @@ public class UserService {
                             .sub2Lan(updateProfileRequestDTO.getSubLan2())
                             .build()) > 0;
             return userResult && addressResult;
+        }
+    }
+
+    // 트랜잭션 밖에서 Ai서비스로 알러지 정보 전송
+    public void modifyAllergy(UpdateProfileRequestDTO dto, String token) {
+        UpdateAllergyRequestDTO allergyInfo = null;
+        String[] splitArr = token.split(":");
+        System.out.println("알러지 요청 함수 진입함");
+        boolean isSocial = "naver".equals(splitArr[0]) ||
+                "kakao".equals(splitArr[0]) ||
+                "google".equals(splitArr[0]);
+        
+        if(isSocial){
+            allergyInfo = UpdateAllergyRequestDTO.builder()
+                    .socialUid(dto.getUid())
+                    .allergies(dto.getAllergies())
+                    .build();
+        }else{
+            allergyInfo = UpdateAllergyRequestDTO.builder()
+                    .userUid(dto.getUid())
+                    .allergies(dto.getAllergies())
+                    .build();
+        }
+
+        if (dto.getAllergies() == null || dto.getAllergies().isEmpty()) {
+            log.info("알러지 정보가 없으므로 삭제 요청 합니다.");
+            return;
+        }
+        System.out.println("알러지 요청 직전");
+        try {
+            aiClient.updateAllergyInfo(allergyInfo);
+            log.info("AI 서비스에 알러지 수정 요청 완료: {}", allergyInfo);
+            if(isSocial){
+                redisUtil.deleteData("socialInfo"+dto.getUid());
+                redisUtil.deleteData("socialAddressInfo"+dto.getUid());
+            }else{
+                redisUtil.deleteData("userInfo"+dto.getUid());
+                redisUtil.deleteData("userAddressInfo"+dto.getUid());
+            }
+        } catch (Exception e) {
+
+            log.warn("AI 서비스 알러지 수정 요청 실패: {}", e.getMessage(), e);
+            if(isSocial){
+                Social redisSocial = (Social) redisUtil.getObjectData("socialInfo"+dto.getUid());
+                Address redisSocialAddress = (Address) redisUtil.getObjectData("socialAddressInfo"+dto.getUid());
+                addressMapper.updateAddressBySocialUid(redisSocialAddress);
+                userMapper.updateSocial(redisSocial);
+                redisUtil.deleteData("socialInfo"+dto.getUid());
+                redisUtil.deleteData("socialAddressInfo"+dto.getUid());
+            }else{
+                User redisUser = (User) redisUtil.getObjectData("userInfo"+dto.getUid());
+                Address redisUserAddress = (Address) redisUtil.getObjectData("userAddressInfo"+dto.getUid());
+                addressMapper.updateAddressByUserUId(redisUserAddress);
+                userMapper.updateUser(redisUser);
+                redisUtil.deleteData("userInfo"+dto.getUid());
+                redisUtil.deleteData("userAddressInfo"+dto.getUid());
+            }
         }
     }
 
