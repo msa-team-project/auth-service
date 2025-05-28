@@ -15,7 +15,7 @@ spec:
         role: main
       containers:
         - name: auth-service
-          image: 448049828702.dkr.ecr.ap-northeast-2.amazonaws.com/auth-service:latest
+          image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/auth-service:latest
           imagePullPolicy: Always
           lifecycle:
             preStop:
@@ -32,11 +32,11 @@ spec:
             - containerPort: 9002
           env:
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://${MYSQL_IP}:3306/auth?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+              value: jdbc:mysql://$MYSQL_IP:3306/auth?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
             - name: REDIS_PORT
               value: "6379"
             - name: REDIS_URL
-              value: ${REDIS_IP}
+              value: $REDIS_IP
             - name: AI_SERVICE_URL
               value: http://ai-service:80
             - name: SPRING_PROFILES_ACTIVE
