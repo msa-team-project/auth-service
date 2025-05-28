@@ -96,9 +96,12 @@ jobs:
       - name: Substitute environment variables in deployment file
         env:
           MYSQL_IP: ${{ fromJSON(steps.fetch.outputs.workspace-outputs-json).MYSQL_IP }}
+          RABBITMQ_IP: ${{ fromJSON(steps.fetch.outputs.workspace-outputs-json).RABBITMQ_IP }}
           REDIS_IP: ${{ fromJSON(steps.fetch.outputs.workspace-outputs-json).REDIS_IP }}
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          envsubst < k8s/deployment.yml > k8s/deployment.rendered.yml
 
       - name: Deploy to Kubernetes
         run: |
