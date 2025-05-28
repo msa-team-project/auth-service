@@ -28,6 +28,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      #GitHub Actions runner에 Terraform CLI 바이너리만 설치
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.6  # 원하는 버전 넣기
+
       # Terraform 상태를 읽기 위해 반드시 init을 먼저 실행
       # 이 step은 apply를 수행하지 않고, 기존 backend의 상태를 로드만 함
       - name: Terraform init
