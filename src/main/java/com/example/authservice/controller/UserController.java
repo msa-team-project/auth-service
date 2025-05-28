@@ -81,7 +81,9 @@ public class UserController {
     public boolean updateUserProfile(HttpServletRequest request, @RequestBody UpdateProfileRequestDTO updateProfileRequestDTO){
         String token = request.getHeader("Authorization").substring(7);
         log.info("user update profile :: {}", token);
-        return userService.updateUserProfile(token, updateProfileRequestDTO);
+        boolean result = userService.updateUserProfile(token, updateProfileRequestDTO);
+        userService.modifyAllergy(updateProfileRequestDTO, token);
+        return result;
     }
 
     @PostMapping("/logout")

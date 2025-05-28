@@ -1,6 +1,7 @@
 package com.example.authservice.client;
 
 import com.example.authservice.dto.AllergyInfoRequestDTO;
+import com.example.authservice.dto.UpdateAllergyRequestDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,6 +12,6 @@ public interface AiClient {
     void sendAllergyInfo(@RequestBody AllergyInfoRequestDTO allergyInfoRequestDTO);
 
     @PutMapping("/user-allergy")
-    void updateAllergyInfo(@RequestBody AllergyInfoRequestDTO allergyInfoRequestDTO);
+    void updateAllergyInfo(@RequestBody UpdateAllergyRequestDTO updateAllergyRequestDTO);
 
 }
