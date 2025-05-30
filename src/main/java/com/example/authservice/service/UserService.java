@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.example.authservice.type.Role.ROLE_USER;
 import static com.example.authservice.type.Type.*;
@@ -617,7 +616,7 @@ public class UserService {
         return emailService;
     }
 
-    public List<ManagerDTO> getManagers() {
+    public List<ManagerResponseDTO> getManagers() {
         return userMapper.findManagers();
     }
 }
