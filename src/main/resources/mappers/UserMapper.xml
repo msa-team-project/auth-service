@@ -114,7 +114,7 @@
             user_id = #{userId};
     </update>
 
-    <select id="findManagers" resultType="com.example.authservice.dto.ManagerDTO">
+    <select id="findManagers" resultType="com.example.authservice.dto.ManagerResponseDTO">
         SELECT
                 uid AS userUid,
                 user_id AS userId,
