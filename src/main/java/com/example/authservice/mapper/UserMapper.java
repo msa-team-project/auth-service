@@ -1,6 +1,6 @@
 package com.example.authservice.mapper;
 
-import com.example.authservice.dto.ManagerDTO;
+import com.example.authservice.dto.ManagerResponseDTO;
 import com.example.authservice.model.Social;
 import com.example.authservice.model.User;
 import feign.Param;
@@ -31,6 +31,6 @@ public interface UserMapper {
     int activeSocial(String userId);
     int updateSocial(Social social);
     int updateUser(User user);
-    List<ManagerDTO> findManagers();
+    List<ManagerResponseDTO> findManagers();
     void finalDeleteUser(int userId);
 }
