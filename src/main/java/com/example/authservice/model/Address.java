@@ -1,12 +1,12 @@
 package com.example.authservice.model;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor // 기본 생성자 추가
+@AllArgsConstructor // 모든 필드 생성자 추가 (혹시 생성자 매핑 쓸 때 대비)
 public class Address {
     private Long uid;
     private Integer userUid;
