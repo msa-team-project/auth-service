@@ -4,12 +4,16 @@ import com.example.authservice.model.Address;
 import com.example.authservice.model.User;
 import com.example.authservice.type.Role;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.List;
 
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserJoinRequestDTO {
     private String userId;
     private String password;
