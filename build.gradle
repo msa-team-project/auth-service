@@ -34,6 +34,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.4'
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
     // redis 라이브러리
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
