@@ -9,12 +9,18 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 
-@RequiredArgsConstructor
 @Service
 public class RedisUtil {
     private final StringRedisTemplate template;
-    @Qualifier("objectRedisTemplate")
     private final RedisTemplate<String, Object> objectRedisTemplate;
+
+    public RedisUtil(
+            StringRedisTemplate template,
+            @Qualifier("objectRedisTemplate") RedisTemplate<String, Object> objectRedisTemplate
+    ) {
+        this.template = template;
+        this.objectRedisTemplate = objectRedisTemplate;
+    }
 
     public String getData(String key) {
         ValueOperations<String, String> valueOperations = template.opsForValue();
