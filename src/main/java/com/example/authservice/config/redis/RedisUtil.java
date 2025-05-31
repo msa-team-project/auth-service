@@ -35,6 +35,7 @@ public class RedisUtil {
         ValueOperations<String, String> valueOperations = template.opsForValue();
         Duration expireDuration = Duration.ofSeconds(duration);
         valueOperations.set(key, value, expireDuration);
+        System.out.println("✅ setDataExpire 실행됨 - key: " + key + ", value: " + value + ", duration: " + duration + "s");
     }
 
     public void deleteData(String key) {
