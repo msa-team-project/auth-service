@@ -1,5 +1,8 @@
 package com.example.authservice.config.redis;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,42 +21,52 @@ public class RedisConfig {
 
     @Value("${spring.data.redis.host}")
     private String host;
-
     @Value("${spring.data.redis.port}")
     private String port;
-
     @Value("${spring.data.redis.password}")
     private String password;
-
     @Value("${spring.data.redis.username}")
     private String username;
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
-        redisStandaloneConfiguration.setHostName(host);
-        redisStandaloneConfiguration.setPort(Integer.parseInt(port));
-        redisStandaloneConfiguration.setPassword(password);
-        redisStandaloneConfiguration.setUsername(username);
-        LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory(redisStandaloneConfiguration);
-        return lettuceConnectionFactory;
+        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
+        config.setHostName(host);
+        config.setPort(Integer.parseInt(port));
+        config.setPassword(password);
+        config.setUsername(username);
+        return new LettuceConnectionFactory(config);
     }
 
-    // 문자열 key + 문자열 value
     @Bean
     public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory factory) {
         return new StringRedisTemplate(factory);
     }
 
+    // ✅ 추가된 ObjectMapper
+    @Bean
+    public ObjectMapper redisObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return mapper;
+    }
+
+    // ✅ 수정된 objectRedisTemplate
     @Bean(name = "objectRedisTemplate")
-    public RedisTemplate<String, Object> objectRedisTemplate(RedisConnectionFactory factory) {
+    public RedisTemplate<String, Object> objectRedisTemplate(
+            RedisConnectionFactory factory,
+            ObjectMapper redisObjectMapper
+    ) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
 
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(redisObjectMapper);
+
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setValueSerializer(serializer);
         template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setHashValueSerializer(serializer);
 
         template.afterPropertiesSet();
         return template;
