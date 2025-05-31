@@ -23,6 +23,7 @@ public class EmailService {
 
     // 1) Front에서 받은 코드를 저장
     public void storeCode(String email, String code) {
+        System.out.println("✅ storeCode() 호출됨 - email: " + email + ", code: " + code);
         redisUtil.setDataExpire(email, code, 60 * 30L);
     }
 
