@@ -1,8 +1,18 @@
+// grpc
+buildscript {
+    ext {
+        protobufVersion = '3.25.1'
+        protobufPluginVersion = '0.8.14'
+        grpcVersion = '1.58.1'
+    }
+}
+
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.4'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'jacoco'
+    id 'com.google.protobuf' version '0.9.4'
 }
 
 group = 'com.example'
@@ -44,8 +54,14 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'    // JWT 구현체
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // JSON 처리를 위한 Jackson 모듈
 
-    // spring에서 465포트(네이버)를 통해 메일을 보내줌
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    // grpc
+    implementation "com.google.protobuf:protobuf-java-util:3.25.1"
+    implementation 'com.google.protobuf:protobuf-java:3.25.1'
+    implementation 'net.devh:grpc-client-spring-boot-starter:2.15.0.RELEASE' // 클라이언트 의존성 추가
+    runtimeOnly "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    implementation "io.grpc:grpc-protobuf:${grpcVersion}"
+    implementation "io.grpc:grpc-stub:${grpcVersion}"
+    compileOnly 'org.apache.tomcat:annotations-api:6.0.53'
 
     // redis 통신 프레임워크
     implementation 'io.lettuce:lettuce-core:6.2.1.RELEASE'
@@ -68,6 +84,43 @@ dependencyManagement {
     imports {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
     }
+}
+
+// grpc
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:${protobufVersion}"
+    }
+    clean {
+        delete generatedFilesBaseDir
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc{}
+        }
+    }
+}
+sourceSets {
+    main {
+        proto {
+            srcDir 'src/main/proto'
+        }
+        java {
+            srcDirs += ['build/generated/source/proto/main/java', 'build/generated/source/proto/main/grpc']
+        }
+    }
+}
+tasks.named('compileJava') {
+    dependsOn tasks.named('generateProto')
+}
+
+tasks.named('build') {
+    dependsOn tasks.named('generateProto')
 }
 
 tasks.named('test') {
@@ -106,4 +159,8 @@ jacocoTestCoverageVerification {
             }
         }
     }
+}
+
+tasks.withType(ProcessResources).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

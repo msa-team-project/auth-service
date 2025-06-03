@@ -27,5 +27,7 @@ jwt:
   issuer: ${JWT_ISSUER}
   secret_key: ${JWT_SECRET_KEY}
 
-ai:
-  url: ${AI_SERVICE_URL}
+grpc:
+  client:
+    ai-service:
+      address: ${AI_SERVICE_URL}
