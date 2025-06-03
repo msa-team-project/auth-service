@@ -1,6 +1,6 @@
 package com.example.authservice.service;
 
-import com.example.authservice.client.AiClient;
+import com.example.authservice.client.AiGrpcClient;
 import com.example.authservice.config.redis.RedisUtil;
 import com.example.authservice.config.security.CustomUserDetails;
 import com.example.authservice.dto.*;
@@ -38,7 +38,7 @@ public class UserService {
     private final TokenProviderService tokenProviderService;
     private final EmailService emailService;
     private final RedisUtil redisUtil;
-    private final AiClient aiClient;
+    private final AiGrpcClient aiGrpcClient;
 
     @Transactional
     public UserLoginResponseDTO login(String username, String password) {
@@ -129,24 +129,12 @@ public class UserService {
 
     // 트랜잭션 밖에서 Ai서비스로 알러지 정보 전송
     public void notifyAiAboutAllergy(UserJoinRequestDTO dto, int userUid) {
-        if (dto.getAllergies() == null || dto.getAllergies().isEmpty()) {
-            log.info("알러지 정보가 없으므로 AI 호출을 생략합니다.");
-            return;
-        }
-
-        AllergyInfoRequestDTO allergyInfo = AllergyInfoRequestDTO.builder()
-                .userUid((long) userUid)
-                .allergies(dto.getAllergies())
-                .build();
-
         try {
-            aiClient.sendAllergyInfo(allergyInfo);
-            log.info("AI 서비스에 알러지 정보 전송 완료: {}", allergyInfo);
+            aiGrpcClient.sendAllergyInfo(dto, userUid);
         } catch (Exception e) {
-            log.warn("AI 서비스 알러지 정보 전송 실패: {}", e.getMessage(), e);
-            User findUser = userMapper.findUserByUserUid(userUid);
-            addressMapper.finalDeleteUserAddress(findUser.getUid());
-            userMapper.finalDeleteUser(findUser.getUid());
+            log.warn("AI 알러지 전송 실패 후 사용자 롤백 처리");
+            addressMapper.finalDeleteUserAddress(userUid);
+            userMapper.finalDeleteUser(userUid);
         }
     }
 
@@ -361,7 +349,9 @@ public class UserService {
                     .userId(findSocial.getUserId())
                     .userName(findSocial.getUserName())
                     .email(findSocial.getEmail())
+                    .emailyn(findSocial.getEmailyn())
                     .phone(findSocial.getPhone())
+                    .phoneyn(findSocial.getPhoneyn())
                     .type(findSocial.getType())
                     .point(findSocial.getPoint())
                     .role(findSocial.getRole())
@@ -387,7 +377,9 @@ public class UserService {
                     .userId(findUser.getUserId())
                     .userName(findUser.getUserName())
                     .email(findUser.getEmail())
+                    .emailyn(findUser.getEmailyn())
                     .phone(findUser.getPhone())
+                    .phoneyn(findUser.getPhoneyn())
                     .type(USER)
                     .point(findUser.getPoint())
                     .role(findUser.getRole())
@@ -558,56 +550,27 @@ public class UserService {
     // 트랜잭션 밖에서 Ai서비스로 알러지 정보 전송
     public void modifyAllergy(UpdateProfileRequestDTO dto, String token) {
         UpdateAllergyRequestDTO allergyInfo = null;
-        String[] splitArr = token.split(":");
-        System.out.println("알러지 요청 함수 진입함");
-        boolean isSocial = "naver".equals(splitArr[0]) ||
-                "kakao".equals(splitArr[0]) ||
-                "google".equals(splitArr[0]);
-        
-        if(isSocial){
-            allergyInfo = UpdateAllergyRequestDTO.builder()
-                    .socialUid(dto.getUid())
-                    .allergies(dto.getAllergies())
-                    .build();
-        }else{
-            allergyInfo = UpdateAllergyRequestDTO.builder()
-                    .userUid(dto.getUid())
-                    .allergies(dto.getAllergies())
-                    .build();
-        }
+        boolean isSocial = token.startsWith("naver:") || token.startsWith("kakao:") || token.startsWith("google:");
 
-        if (dto.getAllergies() == null || dto.getAllergies().isEmpty()) {
-            log.info("알러지 정보가 없으므로 삭제 요청 합니다.");
-            return;
-        }
-        System.out.println("알러지 요청 직전");
         try {
-            aiClient.updateAllergyInfo(allergyInfo);
-            log.info("AI 서비스에 알러지 수정 요청 완료: {}", allergyInfo);
-            if(isSocial){
-                redisUtil.deleteData("socialInfo"+dto.getUid());
-                redisUtil.deleteData("socialAddressInfo"+dto.getUid());
-            }else{
-                redisUtil.deleteData("userInfo"+dto.getUid());
-                redisUtil.deleteData("userAddressInfo"+dto.getUid());
-            }
+            aiGrpcClient.updateAllergyInfo(dto, isSocial);
+            // 캐시 삭제
+            String prefix = isSocial ? "social" : "user";
+            redisUtil.deleteData(prefix + "Info" + dto.getUid());
+            redisUtil.deleteData(prefix + "AddressInfo" + dto.getUid());
         } catch (Exception e) {
+            log.warn("알러지 수정 실패: {} 복구 시도", e.getMessage());
 
-            log.warn("AI 서비스 알러지 수정 요청 실패: {}", e.getMessage(), e);
-            if(isSocial){
-                Social redisSocial = (Social) redisUtil.getObjectData("socialInfo"+dto.getUid());
-                Address redisSocialAddress = (Address) redisUtil.getObjectData("socialAddressInfo"+dto.getUid());
-                addressMapper.updateAddressBySocialUid(redisSocialAddress);
-                userMapper.updateSocial(redisSocial);
-                redisUtil.deleteData("socialInfo"+dto.getUid());
-                redisUtil.deleteData("socialAddressInfo"+dto.getUid());
-            }else{
-                User redisUser = (User) redisUtil.getObjectData("userInfo"+dto.getUid());
-                Address redisUserAddress = (Address) redisUtil.getObjectData("userAddressInfo"+dto.getUid());
-                addressMapper.updateAddressByUserUId(redisUserAddress);
-                userMapper.updateUser(redisUser);
-                redisUtil.deleteData("userInfo"+dto.getUid());
-                redisUtil.deleteData("userAddressInfo"+dto.getUid());
+            if (isSocial) {
+                Social backup = (Social) redisUtil.getObjectData("socialInfo" + dto.getUid());
+                Address address = (Address) redisUtil.getObjectData("socialAddressInfo" + dto.getUid());
+                userMapper.updateSocial(backup);
+                addressMapper.updateAddressBySocialUid(address);
+            } else {
+                User backup = (User) redisUtil.getObjectData("userInfo" + dto.getUid());
+                Address address = (Address) redisUtil.getObjectData("userAddressInfo" + dto.getUid());
+                userMapper.updateUser(backup);
+                addressMapper.updateAddressByUserUId(address);
             }
         }
     }

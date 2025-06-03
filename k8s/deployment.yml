@@ -38,7 +38,7 @@ spec:
             - name: REDIS_URL
               value: $REDIS_IP
             - name: AI_SERVICE_URL
-              value: http://ai-service:80
+              value: static://ai-service:6008
             - name: SPRING_PROFILES_ACTIVE
               value: deploy
             - name: SPRING_DATASOURCE_USER

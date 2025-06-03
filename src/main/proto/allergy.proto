@@ -1,0 +1,19 @@
+// allergy.proto
+syntax = "proto3";
+package ai;
+
+option java_package = "com.example.authservice.grpc"; // 변경 가능
+option java_multiple_files = true;
+
+service AiService {
+  rpc SendAllergyInfo (SaveAllergyRequest) returns (Empty);
+  rpc UpdateAllergyInfo (SaveAllergyRequest) returns (Empty);
+}
+
+message SaveAllergyRequest {
+  int64 user_uid = 1;
+  int64 social_uid = 2;
+  repeated string allergies = 3;
+}
+
+message Empty {}
