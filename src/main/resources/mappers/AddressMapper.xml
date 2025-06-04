@@ -14,7 +14,7 @@
         <result property="sub1Lat" column="sub1_lat"/>
         <result property="sub1Lan" column="sub1_lan"/>
         <result property="sub2Lat" column="sub2_lat"/>
-        <result property="sub2Lan" column="sub2_Lan"/>
+        <result property="sub2Lan" column="sub2_lan"/>
     </resultMap>
 
     <insert id="insertAddress" parameterType="Address" useGeneratedKeys="true" keyProperty="uid">

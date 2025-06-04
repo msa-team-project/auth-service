@@ -1,16 +1,15 @@
 package com.example.authservice.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class UpdateAddressRequestDTO {
-    private int userUid;
+    private Long userUid;
+    private Long socialUid;
     private String mainAddress;
     private String subAddress1;
     private String subAddress2;

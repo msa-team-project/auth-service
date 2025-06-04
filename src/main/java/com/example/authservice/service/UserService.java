@@ -448,6 +448,10 @@ public class UserService {
         address.setSub2Lat(request.getSubLat2());
         address.setSub2Lan(request.getSubLan2());
 
+        log.info("updateAddress: " + address.getSubAddress2());
+        log.info("updateAddress: " + address.getSub2Lat());
+        log.info("updateAddress: " + address.getSub2Lan());
+
         // DB 업데이트
         int updatedRows = isSocial
                 ? addressMapper.updateAddressByUserUId(address)
