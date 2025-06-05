@@ -4,14 +4,11 @@ import com.example.authservice.dto.EmailRequestDTO;
 import com.example.authservice.exception.EmailNotVerifiedException;
 import com.example.authservice.mapper.UserMapper;
 import com.example.authservice.service.EmailService;
-import com.example.authservice.service.UserService;
-import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 
 @Slf4j

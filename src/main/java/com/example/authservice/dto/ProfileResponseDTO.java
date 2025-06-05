@@ -14,7 +14,9 @@ public class ProfileResponseDTO {
     private String userId;
     private String userName;
     private String email;
+    private String emailyn;
     private String phone;
+    private String phoneyn;
     private Type type;
     private int point;
     private Role role;
