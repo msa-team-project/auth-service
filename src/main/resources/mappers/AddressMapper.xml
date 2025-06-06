@@ -38,7 +38,7 @@
         WHERE social_uid = #{socialUid}
     </select>
 
-    <update id="updateAddressByUserUId" parameterType="Address" useGeneratedKeys="true" keyProperty="uid">
+    <update id="updateAddressByUserUid" parameterType="Address" useGeneratedKeys="true" keyProperty="uid">
         UPDATE user_address
         <set>
             main_address  = #{mainAddress},

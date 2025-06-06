@@ -425,9 +425,20 @@ public class UserService {
                 || parts[0].equals("google");
 
         // DB에서 기존 주소 불러오기
-        Address address = isSocial
-                ? addressMapper.findBySocialUid( userMapper.findSocialByUserId(parts[1]).getUid() )
-                : addressMapper.findByUserUid( tokenProviderService.getTokenDetails(token).getUid() );
+//        Address address = isSocial
+//                ? addressMapper.findBySocialUid( userMapper.findSocialByUserId(parts[1]).getUid() )
+//                : addressMapper.findByUserUid( tokenProviderService.getTokenDetails(token).getUid() );
+        Address address;
+
+        if (isSocial) {
+            int socialUid = userMapper.findSocialByUserId(parts[1]).getUid();
+            address = addressMapper.findBySocialUid(socialUid);
+            address.setSocialUid(socialUid);
+        } else {
+            int userUid = tokenProviderService.getTokenDetails(token).getUid();
+            address = addressMapper.findByUserUid(userUid);
+            address.setUserUid(userUid);
+        }
 
         // Address 엔티티에 변경 사항 반영
         address.setMainAddress(request.getMainAddress());
@@ -440,16 +451,27 @@ public class UserService {
         address.setSub2Lat(request.getSubLat2());
         address.setSub2Lan(request.getSubLan2());
 
-        log.info("updateAddress: " + address.getSubAddress2());
-        log.info("updateAddress: " + address.getSub2Lat());
-        log.info("updateAddress: " + address.getSub2Lan());
+        log.info("주소 갱신 요청: {}", address);
 
         // DB 업데이트
+//        int updatedRows = isSocial
+//                ? addressMapper.updateAddressByUserUid(address)
+//                : addressMapper.updateAddressBySocialUid(address);
         int updatedRows = isSocial
-                ? addressMapper.updateAddressByUserUId(address)
-                : addressMapper.updateAddressBySocialUid(address);
+                ? addressMapper.updateAddressBySocialUid(address)
+                : addressMapper.updateAddressByUserUid(address);
+
 
         boolean success = (updatedRows > 0);
+
+        if (updatedRows == 0) {
+            log.warn("주소 업데이트 실패: uid={}, isSocial={}, address={}",
+                    isSocial ? address.getSocialUid() : address.getUserUid(),
+                    isSocial,
+                    address
+            );
+        }
+
 
         // 결과 DTO 리턴
         return UpdateAddressResponseDTO.builder()
@@ -534,7 +556,7 @@ public class UserService {
             log.info("before save redis address update");
             redisUtil.setObjectDataExpire("userAddressInfo:"+findUser.getUid(), findAddress, 60 * 30L);
 
-            boolean addressResult = addressMapper.updateAddressByUserUId(
+            boolean addressResult = addressMapper.updateAddressByUserUid(
                     Address.builder()
                             .userUid(findUser.getUid())
                             .mainAddress(updateProfileRequestDTO.getMainAddress())
@@ -574,7 +596,7 @@ public class UserService {
                 User backup = (User) redisUtil.getObjectData("userInfo" + dto.getUid());
                 Address address = (Address) redisUtil.getObjectData("userAddressInfo" + dto.getUid());
                 userMapper.updateUser(backup);
-                addressMapper.updateAddressByUserUId(address);
+                addressMapper.updateAddressByUserUid(address);
             }
         }
     }
