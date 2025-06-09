@@ -17,7 +17,7 @@ public interface AddressMapper {
 
     Address findByUserUid(Integer userUid);
     Address findBySocialUid(Integer socialUid);
-    int updateAddressByUserUId(Address address);
+    int updateAddressByUserUid(Address address);
     int updateAddressBySocialUid(Address address);
 
     void finalDeleteUserAddress(int userId);

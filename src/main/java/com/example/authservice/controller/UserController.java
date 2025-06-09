@@ -98,9 +98,16 @@ public class UserController {
     }
 
     //주소 수정
+//    @PutMapping("/address")
+//    public UpdateAddressResponseDTO updateUserAddress(@RequestHeader("Authorization") String bearerToken, @RequestBody UpdateAddressRequestDTO request) {
+//        String token = bearerToken.substring(7);
+//        log.info("update user address :: {}", request);
+//        return userService.updateAddress(token,request);
+//    }
+
     @PutMapping("/address")
-    public UpdateAddressResponseDTO updateUserAddress(@RequestHeader("Authorization") String bearerToken, @RequestBody UpdateAddressRequestDTO request) {
-        String token = bearerToken.substring(7);
+    public UpdateAddressResponseDTO updateUserAddress(HttpServletRequest httpServletRequest, @RequestBody UpdateAddressRequestDTO request) {
+        String token = httpServletRequest.getHeader("Authorization").substring(7);
         log.info("update user address :: {}", request);
         return userService.updateAddress(token,request);
     }
